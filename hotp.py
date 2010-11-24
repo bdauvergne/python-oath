@@ -75,10 +75,13 @@ def totp(key, format='dec8', period=30, t=None, hash=hashlib.sha1):
 def accept_totp(key, response, period=30, format='dec8', hash=hashlib.sha1,
         forward_drift=1, backward_drift=1, drift=0, t=None):
     '''Validate a TOTP value inside a window of 
-       [drift-bacward_drit:drift+forward_drift] of time steps.
+       [drift-bacward_drift:drift+forward_drift] of time steps.
+       Where drift is the drift obtained during the last call to accept_totp.
 
        Return a pair (v,d) where v is a boolean giving the result, and d the
-       needed drift to validate the value.
+       needed drift to validate the value. The drift value should be saved for
+       user with later call to accept_totp in order to accept a slowly
+       accumulating drift with a token clock.
     '''
     t = t or time.time()
     for i in range(-backward_drift,forward_drift+1):
