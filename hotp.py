@@ -120,7 +120,6 @@ if __name__ == '__main__':
         assert(hex(v)[2:] == hexa)
         assert(str(v) == deci)
         assert(dec(h,6) == trunc)
-    # TOTP test vectors 
     secret = binascii.hexlify('12345678901234567890')
     tvector3 = [
             (59, hashlib.sha1, '94287082'),
@@ -128,4 +127,4 @@ if __name__ == '__main__':
     for timestamp, hash, value in tvector3:
         assert (totp(secret,t=datetime.datetime.utcfromtimestamp(timestamp),hash=hash) == value)
     assert(accept_totp(secret, '94287082', t=65) == (True, -1))
-    assert(accept_totp(secret, '94287082', t=65, drift=-1 == (True, -1))
+    assert(accept_totp(secret, '94287082', t=65, drift=-1) == (True, -1))
