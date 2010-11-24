@@ -1,0 +1,3 @@
+- implement accept_hotp
+- add truncation functions for hashing algorithm with a larger output like SHA2
+  variant.
