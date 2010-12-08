@@ -131,3 +131,6 @@ if __name__ == '__main__':
         assert (totp(secret,t=datetime.datetime.utcfromtimestamp(timestamp),hash=hash) == value)
     assert(accept_totp(secret, '94287082', t=65) == (True, -1))
     assert(accept_totp(secret, '94287082', t=65, drift=-1) == (True, -1))
+    import sys
+    if len(sys.argv) > 1:
+        print totp(sys.argv[1], format='dec6')
