@@ -48,6 +48,8 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
 
     if format == 'hex40':
         return binascii.hexlify(bin_hotp[0:5])
+    elif format == 'dec4':
+        return dec(bin_hotp, 4)
     elif format == 'dec6':
         return dec(bin_hotp, 6)
     elif format == 'dec7':
