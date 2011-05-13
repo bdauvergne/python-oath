@@ -11,7 +11,7 @@ Python implementation of HOTP and TOTP algorithms from the OATH project.
 
 def __truncated_value(h):
     bytes = map(ord, h)
-    offset = bytes[19] & 0xf
+    offset = bytes[-1] & 0xf
     v = (bytes[offset] & 0x7f) << 24 | (bytes[offset+1] & 0xff) << 16 | \
             (bytes[offset+2] & 0xff) << 8 | (bytes[offset+3] & 0xff)
     return v
