@@ -6,7 +6,7 @@ import binascii
 Python implementation of HOTP and TOTP algorithms from the OATH project.
 '''
 
-def __truncated_value(h):
+def truncated_value(h):
     bytes = map(ord, h)
     offset = bytes[-1] & 0xf
     v = (bytes[offset] & 0x7f) << 24 | (bytes[offset+1] & 0xff) << 16 | \
@@ -14,13 +14,17 @@ def __truncated_value(h):
     return v
 
 def dec(h,p):
-    v = str(__truncated_value(h))
+    v = str(truncated_value(h))
     return v[len(v)-p:]
 
-def __hotp(key, counter, hash=hashlib.sha1):
-    hex_counter = hex(long(counter))[2:-1]
+def int2beint64(i):
+    hex_counter = hex(long(i))[2:-1]
     hex_counter = '0' * (16 - len(hex_counter)) + hex_counter
     bin_counter = binascii.unhexlify(hex_counter)
+    return bin_counter
+
+def __hotp(key, counter, hash=hashlib.sha1):
+    bin_counter = int2beint64(counter)
     bin_key = binascii.unhexlify(key)
 
     return hmac.new(bin_key, bin_counter, hash).digest()
@@ -133,7 +137,7 @@ if __name__ == '__main__':
         (9, '2679dc69',  '645520489', '520489',),]
     for counter, hexa, deci, trunc in tvector2:
         h = __hotp(secret, counter)
-        v = __truncated_value(h)
+        v = truncated_value(h)
         assert(hex(v)[2:] == hexa)
         assert(str(v) == deci)
         assert(dec(h,6) == trunc)
