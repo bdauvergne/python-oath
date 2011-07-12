@@ -3,8 +3,20 @@ import hmac
 import binascii
 
 '''
-Python implementation of HOTP and TOTP algorithms from the OATH project.
+HOTP implementation
+
+To compute an HOTP one-time-password:
+
+    >>> hotp(key, counter)
+
+where is the hotp is a key given as an hexadecimal string and counter is an
+integer. The counter value must be kept synchronized on the server and the
+client side. 
+
+See also http://tools.ietf.org/html/rfc4226
 '''
+
+__ALL__ = [ 'hotp', 'accept_hotp' ]
 
 def truncated_value(h):
     bytes = map(ord, h)
@@ -30,9 +42,32 @@ def __hotp(key, counter, hash=hashlib.sha1):
     return hmac.new(bin_key, bin_counter, hash).digest()
 
 def hotp(key,counter,format='dec6',hash=hashlib.sha1):
-    '''Compute a HOTP value as prescribed by RFC4226
+    '''
+       Compute a HOTP value as prescribed by RFC4226
 
-       See http://tools.ietf.org/html/rfc4226
+       :params key: 
+           the HOTP secret key given as an hexadecimal string
+       :params counter:
+           the OTP generation counter
+       :params format:
+           the output format, can be:
+              - hex40, for a 40 characters hexadecimal format,
+              - dec4, for a 4 characters decimal format,
+              - dec6,
+              - dec7, or
+              - dec8
+           it defaults to dec6.
+       :params hash:
+           the hash module (usually from the hashlib package) to use,
+           it defaults to hashlib.sha1.
+
+       :returns:
+           a string representation of the OTP value (as instructed by the format parameter).
+
+       Examples:
+
+        >>> hotp('343434', 2, format='dec6')
+            '791903'
     '''
     bin_hotp = __hotp(key, counter, hash)
 
@@ -52,55 +87,62 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
 def accept_hotp(key, response, counter, format='dec6', hash=hashlib.sha1,
         drift=3, backward_drift=0):
     '''
-        Validate an HOTP value inside a window of
-        [counter-backward_drift:counter+forward_drift]
+       Validate a HOTP value inside a window of
+       [counter-backward_drift:counter+forward_drift]
 
-        :params key:
-            the shared secret
-        :type key:
-            hexadecimal string of even length
-        :params response:
-            the OTP to check
-        :type response:
-            ASCII string
-        :params counter:
-            value of the counter running inside an HOTP token, usually it is
-            just the count of HOTP value accepte so far for a given shared
-            secret
-        :params format:
-            the format of the HOTP hash to generate
-        :params hash:
-            the hashing algorithm to use, default to SHA1
-        :params drift:
-            how far we can look forward from the current value of the counter
-        :params backward_drift:
-            how far we can look backward from the current counter value to
-            match the response, default to zero as it is usually a bad idea to
-            look backward as the counter is only advanced when a valid value is
-            checked (and so the counter on the token side should have been
-            incremented too)
+       :params key:
+           the shared secret
+       :type key:
+           hexadecimal string of even length
+       :params response:
+           the OTP to check
+       :type response:
+           ASCII string
+       :params counter:
+           value of the counter running inside an HOTP token, usually it is
+           just the count of HOTP value accepted so far for a given shared
+           secret; see the specifications of HOTP for more details;
+       :params format:
+           the output format, can be:
+             - hex40, for a 40 characters hexadecimal format,
+             - dec4, for a 4 characters decimal format,
+             - dec6,
+             - dec7, or
+             - dec8
+           it defaults to dec6.
+       :params hash:
+           the hash module (usually from the hashlib package) to use,
+           it defaults to hashlib.sha1.
+       :params drift:
+           how far we can look forward from the current value of the counter
+       :params backward_drift:
+           how far we can look backward from the current counter value to
+           match the response, default to zero as it is usually a bad idea to
+           look backward as the counter is only advanced when a valid value is
+           checked (and so the counter on the token side should have been
+           incremented too)
 
-        :returns:
-            a pair of a boolean and an integer:
-             - first is True if the response is validated and False otherwise,
-             - second is the new value for the counter; it can be more than
-               counter + 1 if the drift window was used; you must store it if
-               the response was validated.
+       :returns:
+           a pair of a boolean and an integer:
+            - first is True if the response is validated and False otherwise,
+            - second is the new value for the counter; it can be more than
+              counter + 1 if the drift window was used; you must store it if
+              the response was validated.
 
-        >>> accept_hotp('343434', '122323', 2, format='dec6')
-            (False, 2)
+       >>> accept_hotp('343434', '122323', 2, format='dec6')
+           (False, 2)
 
-        >>> hotp('343434', 2, format='dec6')
-            '791903'
+       >>> hotp('343434', 2, format='dec6')
+           '791903'
 
-        >>> accept_hotp('343434', '791903', 2, format='dec6')
-            (True, 3)
+       >>> accept_hotp('343434', '791903', 2, format='dec6')
+           (True, 3)
 
-        >>> hotp('343434', 3, format='dec6')
-            '907279'
+       >>> hotp('343434', 3, format='dec6')
+           '907279'
 
-        >>> accept_hotp('343434', '907279', 2, format='dec6')
-            (True, 4)
+       >>> accept_hotp('343434', '907279', 2, format='dec6')
+           (True, 4)
     '''
 
     for i in range(-backward_drift, drift+1):
