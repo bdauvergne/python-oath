@@ -5,13 +5,20 @@ import binascii
 import hotp
 
 '''
-Implementation of OATH OCRA specification see 
-http://tools.ietf.org/html/draft-mraihi-mutual-oath-hotp-variants-14
+    Implementation of OCRA
+
+
+    See also http://tools.ietf.org/html/draft-mraihi-mutual-oath-hotp-variants-14
 '''
 
-PERIODS = { 'H': 3600, 'M': 60, 'S': 1 }
+__ALL__ = ('str2ocrasuite')
 
-class OcraCryptoFunction(object):
+# Constants
+PERIODS = { 'H': 3600, 'M': 60, 'S': 1 }
+HOTP = 'HOTP'
+OCRA_1 = 'OCRA-1'
+
+class CryptoFunction(object):
     '''Represents an OCRA CryptoFunction specification'''
     def __init__(self, hash_algo, truncation_length):
         self.hash_algo = hash_algo
@@ -41,7 +48,7 @@ def str2cryptofunction(crypto_function_description):
     s = crypto_function_description.split('-')
     if len(s) != 3:
         raise ValueError, 'CryptoFunction description must be triplet separated by -'
-    if s[0] != 'HOTP':
+    if s[0] != HOTP:
         raise ValueError, ('Unknown CryptoFunction kind', s[0])
     algo = str2hashalgo(s[1])
     try:
@@ -50,10 +57,19 @@ def str2cryptofunction(crypto_function_description):
             raise ValueError
     except ValueError:
         raise ValueError, ('Invalid truncation length', s[2])
-    return OcraCryptoFunction(algo, truncation_length)
+    return CryptoFunction(algo, truncation_length)
 
 class DataInput:
+    '''
+       OCRA data input description
+
+       By calling this instance of this class and giving the needed parameter
+       corrresponding to the data input description, it compute a binary string
+       to give to the HMAC algorithme implemented by a CryptoFunction object
+    '''
+
     __slots__ = [ 'ocrasuite', 'C', 'Q', 'P', 'S', 'T' ]
+
     def __init__(self, ocrasuite, C=None, Q=None, P=None, S=None, T=None):
         self.ocrasuite = ocrasuite
         self.C = C
@@ -126,7 +142,7 @@ def str2datainput(datainput_description):
             algo = str2hashalgo(element[1:] or 'SHA1')
             datainputs['P'] = algo
         elif letter == 'S':
-            lenght = 64
+            length = 64
             if element[1:]:
                 try:
                     length = int(element[1:])
@@ -160,6 +176,9 @@ class OcraSuite(object):
     def __call__(self, key, **kwargs):
         return self.crypto_function(key, self.data_input(**kwargs))
 
+    def accept(self, response, key, **kwargs):
+        return response == self(key, **kwargs)
+
     def __str__(self):
         return '<OcraSuite crypto_function:%s data_input:%s>' % (self.crypto_function,
                 self.data_input)
@@ -168,7 +187,7 @@ def str2ocrasuite(ocrasuite_description):
     elements = ocrasuite_description.split(':')
     if len(elements) != 3:
         raise ValueError, ('Bad OcraSuite description', ocrasuite_description)
-    if elements[0] != 'OCRA-1':
+    if elements[0] != OCRA_1:
         raise ValueError, ('Unsupported OCRA identifier', elements[0])
     crypto_function = str2cryptofunction(elements[1])
     data_input = str2datainput(elements[2])
