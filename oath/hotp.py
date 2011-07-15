@@ -16,7 +16,7 @@ client side.
 See also http://tools.ietf.org/html/rfc4226
 '''
 
-__ALL__ = [ 'hotp', 'accept_hotp' ]
+__ALL__ = ( 'hotp', 'accept_hotp' )
 
 def truncated_value(h):
     bytes = map(ord, h)
@@ -51,7 +51,8 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
            the OTP generation counter
        :params format:
            the output format, can be:
-              - hex40, for a 40 characters hexadecimal format,
+              - hex, for a variable length hexadecimal format,
+              - hex-notrunc, for a 40 characters hexadecimal non-truncated format,
               - dec4, for a 4 characters decimal format,
               - dec6,
               - dec7, or
@@ -71,9 +72,7 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
     '''
     bin_hotp = __hotp(key, counter, hash)
 
-    if format == 'hex40':
-        return binascii.hexlify(bin_hotp[0:5])
-    elif format == 'dec4':
+    if format == 'dec4':
         return dec(bin_hotp, 4)
     elif format == 'dec6':
         return dec(bin_hotp, 6)
@@ -81,6 +80,14 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
         return dec(bin_hotp, 7)
     elif format == 'dec8':
         return dec(bin_hotp, 8)
+    elif format == 'hex':
+        return hex(truncated_value(bin_hotp))[2:]
+    elif format == 'hex-notrunc':
+        return binascii.hexlify(bin_hotp)
+    elif format == 'bin':
+        return bin_hotp
+    elif format == 'dec':
+        return str(truncated_value(bin_hotp))
     else:
         raise ValueError('unknown format')
 
