@@ -118,7 +118,7 @@ def accept_totp( response, key, format='dec8', period=30, t=None,
     t = t or time.time()
     for i in range(-backward_drift,forward_drift+1):
         d = (drift+i) * period
-        if totp(key, format=format, period=period, hash=hash, t=t+d) == response:
+        if totp(key, format=format, period=period, hash=hash, t=t+d) == str(response):
             return True, drift+i
     return False, 0
 

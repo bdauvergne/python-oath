@@ -177,7 +177,7 @@ class OcraSuite(object):
         return self.crypto_function(key, self.data_input(**kwargs))
 
     def accept(self, response, key, **kwargs):
-        return response == self(key, **kwargs)
+        return str(response) == self(key, **kwargs)
 
     def __str__(self):
         return '<OcraSuite crypto_function:%s data_input:%s>' % (self.crypto_function,
