@@ -1,0 +1,2744 @@
+
+
+
+Network Working Group                                           P. Hoyer
+Internet-Draft                                             ActivIdentity
+Intended status: Standards Track                                T. Moses
+Expires: July 31, 2010                                           Entrust
+                                                                  M. Pei
+                                                                VeriSign
+                                                              S. Machani
+                                                              Diversinet
+                                                        January 27, 2010
+
+
+                                 VALID
+                          draft-hoyer-valid-01
+
+Abstract
+
+   This document describes a Web-service interface standard for an
+   authentication-data validation service that supports risk-based,
+   multi-factor authentication.This standard enables enterprises to
+   deploy best-of-breed solutions combining components from different
+   vendors into the same infrastructure.
+
+Status of this Memo
+
+   This Internet-Draft is submitted to IETF in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as Internet-
+   Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   http://www.ietf.org/ietf/1id-abstracts.txt.
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   http://www.ietf.org/shadow.html.
+
+   This Internet-Draft will expire on July 31, 2010.
+
+Copyright Notice
+
+   Copyright (c) 2010 IETF Trust and the persons identified as the
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 1]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the BSD License.
+
+
+Table of Contents
+
+   1.  Introduction . . . . . . . . . . . . . . . . . . . . . . . . .  4
+     1.1.  Key Words  . . . . . . . . . . . . . . . . . . . . . . . .  4
+     1.2.  Notation . . . . . . . . . . . . . . . . . . . . . . . . .  4
+     1.3.  Namespaces . . . . . . . . . . . . . . . . . . . . . . . .  5
+     1.4.  Terminology  . . . . . . . . . . . . . . . . . . . . . . .  5
+   2.  Authentication-Data Validation Service Interface overview  . .  7
+     2.1.  Authentication data communication  . . . . . . . . . . . .  7
+     2.2.  Verified attributes  . . . . . . . . . . . . . . . . . . .  7
+     2.3.  Challenge/response . . . . . . . . . . . . . . . . . . . .  7
+     2.4.  Token collections  . . . . . . . . . . . . . . . . . . . .  8
+   3.  Communication patterns . . . . . . . . . . . . . . . . . . . .  9
+     3.1.  In-band authentication . . . . . . . . . . . . . . . . . .  9
+       3.1.1.  In-band Challenge/Response . . . . . . . . . . . . . .  9
+       3.1.2.  In-band 2 way Challenge/Response . . . . . . . . . . . 10
+     3.2.  Out-of-band challenge  . . . . . . . . . . . . . . . . . . 11
+     3.3.  Out-of-band response . . . . . . . . . . . . . . . . . . . 12
+     3.4.  Client supplies challenge  . . . . . . . . . . . . . . . . 13
+     3.5.  End-user obtains assertions Out-of-band from server  . . . 13
+   4.  Asynchronous communication . . . . . . . . . . . . . . . . . . 15
+     4.1.  Out-of-band challenge  . . . . . . . . . . . . . . . . . . 15
+     4.2.  Out-of-band response . . . . . . . . . . . . . . . . . . . 15
+   5.  User centric and device centric (pseudonymous)
+       authentication models  . . . . . . . . . . . . . . . . . . . . 16
+     5.1.  User Centric authentication model  . . . . . . . . . . . . 16
+     5.2.  Device Centric authentication model  . . . . . . . . . . . 16
+   6.  Authentication moving factor resync  . . . . . . . . . . . . . 17
+     6.1.  Automatic re-sync based on authentication data . . . . . . 17
+     6.2.  Manual re-sync based on presenting moving factor values  . 17
+   7.  Policy models  . . . . . . . . . . . . . . . . . . . . . . . . 18
+   8.  Common message contents  . . . . . . . . . . . . . . . . . . . 20
+     8.1.  Request Security Token . . . . . . . . . . . . . . . . . . 20
+     8.2.  Request Security Token Response  . . . . . . . . . . . . . 21
+   9.  Mechanism-specific message contents  . . . . . . . . . . . . . 23
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 2]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   10. Extensibility  . . . . . . . . . . . . . . . . . . . . . . . . 24
+   11. IANA Considerations  . . . . . . . . . . . . . . . . . . . . . 25
+     11.1. XML namespace registration . . . . . . . . . . . . . . . . 25
+     11.2. VALID Version Registry . . . . . . . . . . . . . . . . . . 25
+   12. Security Considerations  . . . . . . . . . . . . . . . . . . . 26
+   13. Acknowledgements . . . . . . . . . . . . . . . . . . . . . . . 27
+   14. References . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+     14.1. Normative References . . . . . . . . . . . . . . . . . . . 28
+     14.2. Informative References . . . . . . . . . . . . . . . . . . 29
+   Appendix A.  WSDL  . . . . . . . . . . . . . . . . . . . . . . . . 30
+   Appendix B.  Mechanism specific message contents . . . . . . . . . 32
+     B.1.  Username/password  . . . . . . . . . . . . . . . . . . . . 32
+     B.2.  In band one-time-password (OTP)  . . . . . . . . . . . . . 33
+     B.3.  In band one-time-password (OTP) token synchronization  . . 35
+     B.4.  In band challenge/response . . . . . . . . . . . . . . . . 37
+     B.5.  Out-of-band challenge  . . . . . . . . . . . . . . . . . . 39
+     B.6.  Out-of-band response . . . . . . . . . . . . . . . . . . . 40
+     B.7.  Client supplies challenge  . . . . . . . . . . . . . . . . 42
+     B.8.  Challenge/response with signature  . . . . . . . . . . . . 43
+   Appendix C.  Use Cases . . . . . . . . . . . . . . . . . . . . . . 45
+     C.1.  Validation . . . . . . . . . . . . . . . . . . . . . . . . 45
+       C.1.1.  OTP Validation . . . . . . . . . . . . . . . . . . . . 45
+       C.1.2.  Challenge/Response Validation - Server generated
+               challenge  . . . . . . . . . . . . . . . . . . . . . . 45
+       C.1.3.  Challenge/Response Validation - User generated
+               challenge  . . . . . . . . . . . . . . . . . . . . . . 46
+       C.1.4.  2-way mutual Challenge/Response Validation . . . . . . 46
+       C.1.5.  OTP Validation + Server managed PIN  . . . . . . . . . 46
+       C.1.6.  MatrixCardValidation - Server generated challenge  . . 46
+     C.2.  Synchronisation Use Cases  . . . . . . . . . . . . . . . . 46
+       C.2.1.  OTP Token Resync with the Next OTPs  . . . . . . . . . 47
+       C.2.2.  OTP Token Resync with Moving Factor  . . . . . . . . . 47
+   Appendix D.  Requirements  . . . . . . . . . . . . . . . . . . . . 48
+   Authors' Addresses . . . . . . . . . . . . . . . . . . . . . . . . 49
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 3]
+
+Internet-Draft                    VALID                     January 2010
+
+
+1.  Introduction
+
+   The Authentication-Data Validation Service Interface definition
+   (VALID) describes a Web-service interface for a validation server.
+   The specification reuses data definitions from [SAML], [WS-Security]
+   and [WS-Trust] and operates over version 1.2 of [SOAP].  Upon
+   successful validation, the validation server returns a SAML assertion
+   containing verified attributes of the authenticated end-user or a
+   hardware or software device under the end-user's control.
+   Communications between the end-user and the application are not
+   required to follow the Web-services programming model.
+
+1.1.  Key Words
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+1.2.  Notation
+
+   This specification uses the following syntax to define outlines for
+   messages:
+
+      The syntax appears as an XML instance.
+
+      Characters are appended to elements and attributes to indicate
+      cardinality:
+
+      "?" (0 or 1)
+
+      "*" (0 or more)
+
+      "+" (1 or more)
+
+      The character "|" is used to indicate a choice between
+      alternatives.
+
+      The characters "(" and ")" are used to indicate that contained
+      items are to be treated as a group with respect to cardinality or
+      choice.
+
+      The characters "[" and "]" are used to call out references and
+      property names.
+
+      Additional child elements and/or attributes MAY be added at the
+      indicated extension points (see Section 10) but MUST NOT
+      contradict the semantics of the parent and/or owner, respectively.
+      By default, if a receiver does not recognize an extension, the
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 4]
+
+Internet-Draft                    VALID                     January 2010
+
+
+      receiver SHOULD ignore the extension; exceptions to this
+      processing rule, if any, are clearly indicated below.
+
+      XML namespace prefixes (see Table 1) are used to indicate the
+      namespace of the element being defined.
+
+      Elements and Attributes defined by this specification are referred
+      to in the text of this document using XPath 1.0 expressions.
+      Extensibility points are referred to using an extended version of
+      this syntax:
+
+
+
+         An element extensibility point is referred to using {any} in
+         place of the element name.  This indicates that any element
+         name can be used, from any namespace other than the namespace
+         of this specification.
+
+         An attribute extensibility point is referred to using @{any} in
+         place of the attribute name.  This indicates that any attribute
+         name can be used, from any namespace other than the namespace
+         of this specification
+
+1.3.  Namespaces
+
+   The following XML namespace prefixes are used in the specification.
+
+   env:    http://www.w3.org/2003/05/soap-envelope
+   pskc: urn:ietf:params:xml:ns:keyprov:pskc
+   saml:   urn:oasis:names:tc:SAML:2.0:assertion
+   valid:  urn:ietf:params:xml:ns:valid
+   wsp:    http://www.w3.org/ns/ws-policy
+   wss:    http://docs.oasis-open.org/wss/2004/01/
+            oasis-200401-wss-wssecurity-secext-1.0
+   wst:    http://docs.oasis-open.org/ws-sx/ws-trust/200512
+   wst14:  http://docs.oasis-open.org/ws-sx/ws-trust/200802
+   xsd:    http://www.w3.org/2001/XMLSchema
+
+1.4.  Terminology
+
+   The following terms are used in this document.
+
+   Application:  The system component that controls access to sensitive
+      resources by authenticated end-users.
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 5]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   Authentication data:  Information exchanged between the end-user and
+      the validation server as part of the authentication process.  For
+      example a password, an OTP, the response to a challenge, etc.
+
+   Authentication policy:  The combination of authentication mechanisms
+      required to complete successfully before access may be granted.
+
+   Client :  See "Application".
+
+   End-user:  The authentication subject.
+
+   Moving factor:  The factor that makes a one time password
+      computationally unique in combination with a fixed key.  For
+      example the increasing event counter value in [HOTP].
+
+   Server:  See "Validation server".
+
+   Validation server:  The system component that validates
+      authentication data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 6]
+
+Internet-Draft                    VALID                     January 2010
+
+
+2.  Authentication-Data Validation Service Interface overview
+
+   The Authentication-Data Validation Service Interface allows
+   communication of the following data elements in several different
+   communication patterns as described in Section 3.  The interface is
+   based mainly on [WS-Trust].  The following sections apply
+   terminologies and concepts defined in [WS-Trust].
+
+2.1.  Authentication data communication
+
+   The specific requirements for authentication data communication
+   depend upon the specific authentication mechanism.
+
+   In-band authentication data SHALL be passed in the body of <wst:
+   RequestSecurityToken> and <wst:RequestSecurityTokenResponse>
+   elements.
+
+2.2.  Verified attributes
+
+   Upon successful validation of the authentication data, the validation
+   server SHALL issue a SAML assertion containing verified end-user or
+   token attributes, depending if the server is validating user
+   identities (user centric authentication) or device/token
+   (pseudonomous - token centric authentication) .  The client MAY
+   provide a <wsp:Policy> element indicating which attributes it
+   requires.  Required attributes SHALL be referenced using the <saml:
+   Attribute> element, with the <saml:AttributeValue> child element
+   omitted.
+
+   The validation server MAY include the sub-set of the requested
+   attributes whose verified values are known to it.  Otherwise, the
+   validation server SHALL include all verified attributes whose values
+   are known to it.  These attributes MUST be included in the SAML
+   assertion.  They MUST also be included in a separate <wst:Claims>
+   element.  In this way, the application may treat the assertion as
+   opaque data, extracting any attributes it requires from the <wst:
+   Claims> element.
+
+   Attributes SHALL be expressed as <saml:Attribute> elements in
+   accordance with the SAML V2.0 X.500/LDAP Attribute Profile.
+
+2.3.  Challenge/response
+
+   Multi-step authentication mechanisms are supported as shown here.
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 7]
+
+Internet-Draft                    VALID                     January 2010
+
+
+  Message     Direction            Cardinality
+
+  Request     Client  -> Server    Exactly one
+  Response    Client <-> Server    (Zero or more request-response pairs)
+  Response    Client <-  Server    Exactly one
+
+   The protocol terminates when the validation server either includes at
+   least one security token according to [WS-Trust] in the response or
+   returns an <env:Body/env:Fault> element.
+
+2.4.  Token collections
+
+   A set of tokens MAY be requested and issued in a single set of
+   exchanges with the validation server using the "token collection"
+   features of WS-Trust.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 8]
+
+Internet-Draft                    VALID                     January 2010
+
+
+3.  Communication patterns
+
+   The folllowing communication patterns are supported:
+
+3.1.  In-band authentication
+
+    __________                            _____________
+   |          |                          |             |
+   | End-user |------------------------->| Application |
+   |__________|  1. Access application   |_____________|
+                                                |        \
+                                                |         |
+                           2. Obtain assertion  |          > VALID
+                                                |         |
+                                          _____\|/____   /
+                                         |            |
+                                         | Validation |
+                                         |   server   |
+                                         |____________|
+
+
+
+                          In-band authentication
+
+   The end-user accesses the application (1).  The application supplies
+   the authentication data to the validation server and receives an
+   assertion in return (2).
+
+   For in-band challenge/response authentication mechanisms, additional
+   messages between the end-user and the validation server MUST be
+   relayed by the application.
+
+3.1.1.  In-band Challenge/Response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                 [Page 9]
+
+Internet-Draft                    VALID                     January 2010
+
+
+       __________                            _____________
+      |          |                          |             |
+      | End-user |------------------------->| Application |
+      |__________|  1. Access application   |_____________|
+                    4. In-band challenge          /|\        \
+                    5. In-band response            |         |
+                             2. Request assertion  |          > VALID
+                              3. return challenge  |         |
+                              6. obtain assertion  |         |
+                                             _____\|/____   /
+                                            |            |
+                                            | Validation |
+                                            |   server   |
+                                            |____________|
+
+
+                   Figure 1: In-band Challenge/Response
+
+   The "in-band challenge/response" pattern is shown in Figure 1.  The
+   application invokes the validation server (2).  The validation server
+   returns a challenge (3).  The application passes the challenge to the
+   end-user (4).  The end-user may or may not transform the challenge
+   and sends the result to the validation server in-band (5).  The
+   application supplies the authentication data to the validation server
+   and receives an assertion in return (6).
+
+3.1.2.  In-band 2 way Challenge/Response
+
+       __________                                 _____________
+      |          |                               |             |
+      | End-user |------------------------------>| Application |
+      |__________|  1. In-band client challenge  |_____________|
+                    4. In-band server resp & challenge /|\     \
+                    5. In-band client response          |       |
+                            2. Request assertion        |        > VALID
+                            3. return server resp &     |       |
+                               server challenge         |       |
+                              6. obtain assertion       |       |
+                                                  _____\|/____ /
+                                                 |            |
+                                                 | Validation |
+                                                 |   server   |
+                                                 |____________|
+
+
+
+                Figure 2: In-band 2 way Challenge/Response
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 10]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   The "In-band 2 way challenge/response" pattern is shown in Figure 2.
+   This pattern is based on the In-band Challenge/Response pattern but
+   authenticates both the server and the client.  The application
+   receives an in-band client challenge (1).  The application invokes
+   the validation server (2).  The validation server returns the
+   response to the client challenge and a server challenge (3).  The
+   application passes the server response and server challenge to the
+   end-user (4).  The end-user may or may not transform the server
+   challenge and after verifying the server response sends the result to
+   the validation server in-band (5).  The application supplies the
+   authentication data to the validation server and receives an
+   assertion in return (6).
+
+3.2.  Out-of-band challenge
+
+        __________                        _____________
+       |          |                      |             |
+    -->| End-user |--------------------->| Application |
+   |   |__________|   1. Access          |_____________|
+   |                     application            |     \
+   |                                            |      |
+   |                  4. In-band                |      |
+   |                     Response               |      |
+   |                               2. Request   |      |
+   |                                  assertion |       >VALID
+   | 3. Out-of-band                             |      |
+   |    challenge                  5. Obtain    |      |
+   |                                  assertion |      |
+   |                                            |      |
+   |                                      _____\|/____/
+   |                                     |            |
+   |                                     | Validation |
+    -------------------------------------|   server   |
+                                         |____________|
+
+
+
+                           Out-of-band challenge
+
+   The "out-of-band challenge" pattern is shown in Figure 2.  The
+   application invokes the validation server (2).  The validation server
+   then contacts the end-user out-of-band with a challenge (3).  The
+   end-user may or may not transform the challenge and then passes it
+   back to the application (4), which then passes it to the validation
+   server and obtains an assertion in response (5).
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 11]
+
+Internet-Draft                    VALID                     January 2010
+
+
+3.3.  Out-of-band response
+
+        __________                        _____________
+       |          |                      |             |
+    ---| End-user |<-------------------->| Application |
+   |   |__________|   1. Access          |_____________|
+   |                     application           /|\     \
+   |                                            |       |
+   |                  4. In-band                |       |
+   |                     challenge 2. Request   |       |
+   |                                  assertion |       |
+   | 5. Out-of-band                             |       |
+   |    response                   3. Return    |        >VALID
+   |                                  challenge |       |
+   |                                            |       |
+   |                               6. Send      |       |
+   |                                  assertion |       |
+   |                                            |       |
+   |                                      _____\|/____ /
+   |                                     |            |
+   |                                     | Validation |
+    ------------------------------------>|   server   |
+                                         |____________|
+
+
+                           Out-of-band response
+
+   The "out-of-band response" pattern is shown in Figure 3.  The
+   application invokes the validation server (2).  The validation server
+   returns a challenge (3).  The application passes the challenge to the
+   end-user (4).  The end-user may or may not transform the challenge
+   and sends the result to the validation server out-of-band (5).  The
+   validation server sends the assertion to the application (6).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 12]
+
+Internet-Draft                    VALID                     January 2010
+
+
+3.4.  Client supplies challenge
+
+        __________                       _____________
+       |          |                     |             |
+    -->| End-user |-------------------->| Application |
+   |   |__________|  2. Supply          |_____________|
+   |                    challenge              |      \
+   |                    and response           |       |
+   |                                           |       |
+   |                              3. Obtain    |       |
+   |                                 assertion |       |
+   |    1. Obtain                              |        >VALID
+   |       challenge                           |       |
+   |                                           |       |
+   |                                           |       |
+   |                                           |       |
+   |                                     _____\|/____ /
+   |                                    |            |
+   |                                    | Validation |
+    ------------------------------------|   server   |
+                                        |____________|
+
+
+
+                         Client supplies challenge
+
+   The "client supplies challenge" pattern is shown in Figure 4.  The
+   end-user obtains a challenge out-of-band (1), calculates the response
+   and send both challenge and response to the application (2).  The
+   application then uses the challenge and response to obtain an
+   assertion from the validation server (3).
+
+3.5.  End-user obtains assertions Out-of-band from server
+
+    __________                            _____________
+   |          |                          |             |
+   | End-user |------------------------->| Application |
+   |__________|  2. Access application   |_____________|
+      /    |        (passing assertion)
+     |V    |
+     |A    |
+     |L    |
+     |I    |                              ____________
+     |D    |     1. Obtain assertion     |            |
+     |      ---------------------------->| Validation |
+      \                                  |   server   |
+                                         |____________|
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 13]
+
+Internet-Draft                    VALID                     January 2010
+
+
+                  Out-of-band from server authentication
+
+   The End-user obtains the assertion directly or though a proxy from
+   the validation server (1) then passes the assertion to the
+   Application for authentication (2).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 14]
+
+Internet-Draft                    VALID                     January 2010
+
+
+4.  Asynchronous communication
+
+   The out-of-band communication patterns (Section 3.2 and Section 3.3)
+   require asynchronous behavior, so that the application thread is not
+   blocked while the challenge is being processed by the end-user.
+
+4.1.  Out-of-band challenge
+
+   In the case of the "out-of-band challenge" pattern (Section 3.2), the
+   validation server SHALL return an <env:Body/env:Fault> element with
+   the value:
+
+      valid:Pending
+
+   The validation server, upon sending this value, and the application,
+   upon receiving it, SHALL terminate the current session.
+
+   Once the application receives the response from the end-user, it
+   SHALL initiate a new session with the validation server.
+
+4.2.  Out-of-band response
+
+   In the case of the "out-of-band response" pattern (Section 3.3), the
+   validation server SHALL return an <env:Body/env:Fault> element with
+   the value:
+
+      valid:Pending
+
+   The validation server, upon sending this value, and the application,
+   upon receiving it, SHALL terminate the current session.
+
+   Both parties MUST maintain the <wst:RequestSecurityToken/@Context>
+   attribute as metadata associated with the initial session.  In the
+   subsequent session, they MUST use this <wst:RequestSecurityToken/@
+   Context> attribute value to correlate the challenge and response.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 15]
+
+Internet-Draft                    VALID                     January 2010
+
+
+5.  User centric and device centric (pseudonymous) authentication models
+
+   There are two authentication models supported by this specification:
+
+5.1.  User Centric authentication model
+
+   In this model the mapping between a specific user and the devices
+   that belong to the specific user is known and managed by the
+   validation server.  This means that the authentication request will
+   contain explicit user information in form of a UserId
+
+5.2.  Device Centric authentication model
+
+   In this model the validation server does not have any knowledge to
+   whom a specific device belongs.  The user-device mapping will be at
+   the appllication or service provider.  This means that the
+   authentication request MUST NOT contain uer information and that it
+   MUST contain information to uniquely identify the device by using the
+   <DeviceInfo> element as defined in [PSKC].
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 16]
+
+Internet-Draft                    VALID                     January 2010
+
+
+6.  Authentication moving factor resync
+
+   Some authentication schemes gradually lose synchronization between
+   client and server.  In order to compensate for this, the server must
+   accept authentication data values within a range, or window of the
+   moving factor (e.g. the event counter used in event based one time
+   password algorithms, see [HOTP]).  When an authentication moving
+   factor drifts to the edge of, or beyond, the server's window for a
+   particular end-user, the server has to adjust its window.  This
+   process is known as resyncing.
+
+   Resyncing erodes assurance in the authentication event.  So,
+   following a resync event, the validation server commonly requests a
+   second authentication data value, which effectively restores the
+   level of assurance provided by the authentication.
+
+   The following two approaches to resyncing exist:
+
+6.1.  Automatic re-sync based on authentication data
+
+   In this approach, the resynchronisation is based only on the
+   authentication data.  In this apporach the server searches through an
+   extended window of the moving factor(s) to see if it can match the
+   presented authentication data.  In this apporach two OTPs MUST be
+   transmitted so that the server MUST try to match the first OTP with
+   the extended window and also MUST match the second OTP with a normal
+   window.
+
+6.2.  Manual re-sync based on presenting moving factor values
+
+   In this approach to resynchronisation, the server is given the exact
+   value of the moving factor (e.g. the event counter value in [HOTP])
+   together with the OTP.  The server MUST only set the moving factor(s)
+   to the received value if the OTP matches successfully (given the new
+   moving factor values).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 17]
+
+Internet-Draft                    VALID                     January 2010
+
+
+7.  Policy models
+
+   Authentication policy defines the requirements for accessing a
+   resource in terms of mechanisms and their strengths, expressible in
+   disjunctive normal form (that is a disjunction ("OR") of conjunctions
+   ("AND"s)).  This approach supports risk-based multi-factor
+   authentication.
+
+   Two policy models are supported.  In the first model (see figuer
+   below), the application is responsible for invoking the right
+   combination of validation servers in order to satisfy the
+   authentication policy.
+
+                  _____________
+                 |             |
+                 | Application |
+                 |_____________|
+                        |                      \
+           _____________|______________         |
+          |             |              |         > VALID
+          |             |              |        |
+    ______|_____   _____|______   _____|______ /
+   |            | |            | |            |
+   | Validation | | Validation | | Validation |
+   |   server   | |   server   | |   server   |
+   |____________| |____________| |____________|
+
+
+                         Policy aware application
+
+   In the second model (see figure below), the authentication policy is
+   managed through a choreography component, which appears to the
+   application as a validation server and to the validation server as an
+   application.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 18]
+
+Internet-Draft                    VALID                     January 2010
+
+
+                  _____________
+                 |             |
+                 | Application |
+                 |_____________|
+                        |                     \
+                        |                      |
+                        |                       >VALID
+                        |                      |
+                  ______|_______              /
+                 |              |
+                 | Choreography |
+                 |______________|
+                        |                     \
+          ______________|______________        |
+         |              |              |        >VALID
+         |              |              |       |
+    _____|______   _____|______   _____|______/
+   |            | |            | |            |
+   | Validation | | Validation | | Validation |
+   |   server   | |   server   | |   server   |
+   |____________| |____________| |____________|
+
+
+                         Policy aware application
+
+   In either model, the application MAY supply information about the
+   resource to which access is requested in a <wsp:AppliesTo> element.
+   The validation server MAY restrict the resources to which the
+   application SHALL limit access by including a <wsp:AppliesTo> element
+   in its response.  This is not intended as an access-control solution;
+   it is intended only to enforce an appropriate level of authentication
+   assurance, based on the sensitivity of the resource, where the
+   sensitivity is not uniform across all the resources accessible by the
+   application.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 19]
+
+Internet-Draft                    VALID                     January 2010
+
+
+8.  Common message contents
+
+   This section describes the mechanism-independent requirements for
+   message contents.
+
+8.1.  Request Security Token
+
+   The message-independent requirements for "request security token"
+   messages are shown in this example:
+
+<wst:RequestSecurityToken Context=" ... ">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+</wst:RequestSecurityToken>
+
+   <wst:TokenType> - MANDATORY  The client SHALL set the value 'http://
+      docs.oasis-open.org/wss/
+      oasis-wss-saml-token-profile-1.1#SAMLV2.0'.  If the server detects
+      a different value it MAY return a fault.
+
+   <wst:RequestType> - MANDATORY  The client SHALL set the value
+      'http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue' If
+      the server detects a different value it SHALL return a fault.
+
+   <wsp:AppliesTo> - OPTIONAL  If present, the client MUST set the value
+      to a URI identifying the resource, or class of resource, to which
+      access is requested.  If the validation server is policy-aware, it
+      SHOULD use this value to select the applicable authentication
+      policy.  Otherwise, it MUST ignore it.
+
+   <wsp:Policy/saml:Attribute> - OPTIONAL  If present, this element MUST
+      identify a verified end-user attribute requested from the
+      validation server.  Even if the validation server cannot provide
+      all the requested attributes, it SHOULD proceed with the
+      validation process.
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 20]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   <wst:Lifetime> - OPTIONAL  The client MAY specify the lifetime of the
+      requested assertion using this element.  The server MUST verify
+      that the requested lifetime conforms with its own policy for
+      assertion lifetimes.
+
+   <wst:RequestSecurityToken/@Context> - MANDATORY  This attribute MUST
+      be set by the client.  It is an opaque value to the server.  The
+      server MUST use the value as the <wst:RequestSecurityToken/@
+      Context> value in the response.
+
+8.2.  Request Security Token Response
+
+   The common requirements for the final "request security token
+   response" message are shown in this example:
+
+   <wst:RequestSecurityTokenResponse Context=" ... ">
+       <wst:RequestedSecurityToken>
+             ...
+       </wst:RequestedSecurityToken>
+       <wst:Claims Dialect="...">
+           <saml:Attribute/> +
+       </wst:Claims> ?
+       <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+       <wsp:Policy> ?
+           <wsp:RequiredElement> +
+       </wsp:Policy>
+   </wst:RequestSecurityTokenResponse>
+
+   If the authentication data failed to validate, then the server MUST
+   include the <env:Body/env:Fault> element containing the value wst:
+   FailedAuthentication.  In this case, it SHALL NOT include any other
+   elements.
+
+   If the authentication data failed to validate due to missing
+   authentication data, then the server MUST include the <env:Body/
+   env:Fault> element containing the value valid:
+   MissingAuthenticationData.  The server can optionally include
+   elements indicating which authentication data is missing.
+
+   <wst:RequestedSecurityToken> - OPTIONAL - Zero or more  If validation
+      is complete and successful, then the server SHALL include a SAML
+      assertion containing verified end-user attributes.  Otherwise this
+      element SHALL be omitted.  The server SHOULD set the assertion
+      lifetime in accordance with the lifetime specified in the request,
+      or its own policy, whichever is more restrictive.
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 21]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   <wst:RequestType> - MANDATORY  The client SHALL set the value
+      'http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue' If
+      the server detects a different value it SHALL return a fault.
+
+   <wst:Claims> - OPTIONAL  If present, the server SHALL populate this
+      element with verified end-user attributes.
+
+   <wst:Claims/@Dialect> - OPTIONAL  The server SHALL set the value
+      "urn:oasis:names:tc:SAML:2.0".  The client MAY reject responses
+      containing a different value.
+
+   <wpt:AppliesTo> - OPTIONAL  If the authentication assurance level
+      achieved is suitable only for a sub-set of resources, the
+      validation server MUST set a value that identifies that sub-
+      set.The client SHOULD restrict access to resources falling within
+      the sub-set defined by this element.
+
+   <wst:RequestSecurityToken/@Context> - MANDATORY  The server MUST
+      include the @Context value from the request.  The client SHOULD
+      load the context identified by the value.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 22]
+
+Internet-Draft                    VALID                     January 2010
+
+
+9.  Mechanism-specific message contents
+
+   The mechanism-specific requirements for message contents are
+   described in the appendices.  These MAY be used in any combination.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 23]
+
+Internet-Draft                    VALID                     January 2010
+
+
+10.  Extensibility
+
+   This section lists a few common extension points provided by VALID:
+
+   New VALID Version:  Whenever it is necessary to define a new version
+      of this document then a new version number has to be allocated to
+      refer to the new specification version.  The rules for
+      extensibililty are defined in Section 11.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 24]
+
+Internet-Draft                    VALID                     January 2010
+
+
+11.  IANA Considerations
+
+11.1.  XML namespace registration
+
+   This section registers a new XML namespace,
+   "urn:ietf:params:xml:ns:valid", per the guidelines in [RFC3688].
+
+   URI:  urn:ietf:params:xml:ns:valid
+
+   Registrant Contact:  Philip Hoyer (phoyer@actividentity.com).
+
+   XML:
+
+   BEGIN
+   <?xml version="1.0"?>
+   <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.0//EN"
+     "http://www.w3.org/TR/xhtml-basic/xhtml-basic10.dtd">
+   <html xmlns="http://www.w3.org/1999/xhtml">
+   <head>
+     <meta http-equiv="content-type"
+           content="text/html;charset=iso-8859-1"/>
+     <title>VALID Namespace</title>
+   </head>
+   <body>
+     <h1>Namespace for VALID</h1>
+     <h2>urn:ietf:params:xml:ns:valid</h2>
+   <p>See <a href="[URL of published RFC]">RFCXXXX
+       [NOTE TO IANA/RFC-EDITOR:
+        Please replace XXXX with the RFC number of this
+       specification.]</a>.</p>
+   </body>
+   </html>
+   END
+
+11.2.  VALID Version Registry
+
+   IANA is requested to create a registry for VALID version numbers.
+   The registry has the following structure:
+
+     VALID Version              | Specification
+   +---------------------------+----------------
+   | 1.0                       | [This document]
+
+   Standards action is required to define new versions of VALID.  It is
+   not envisioned to depreciate, delete, or modify existing VALID
+   versions.
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 25]
+
+Internet-Draft                    VALID                     January 2010
+
+
+12.  Security Considerations
+
+   The validation server SHOULD authenticate the client and limit access
+   to the validation service only to authorized clients.  This MAY be
+   achieved by object level security (e.g xml signatures as defined in
+   [XMLDSIG] applied to the <env:Header> and <env:Body> elements),
+   transport layer security (e.g.  [TLS]) or network layer security
+   (e.g. isolated network segment).
+
+   The application MAY authenticate the validation server.  This MAY be
+   achieved by object level security (e.g. xml signatures as defined in
+   [XMLDSIG] applied to the <env:Header> and <env:Body> elements or
+   assertion), transport layer security (e.g.  TLS) or network layer
+   security (e.g. isolated network segment).
+
+   The chosen authentication mechanism MUST ensure freshness of the
+   exchanges in order to detect replay attacks.
+
+   Privacy of the authentication data and end-user attributes MAY also
+   require protection.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 26]
+
+Internet-Draft                    VALID                     January 2010
+
+
+13.  Acknowledgements
+
+   The authors of this draft would like to thank the following people
+   for their feedback: Siddharth Bajaj, David M'Raihi, Mike Davis and
+   Peter Tapling.
+
+   This work is based on earlier work by the members of OATH (Initiative
+   for Open AuTHentication), see [OATH], to specify a format that can be
+   freely distributed to the technical community.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 27]
+
+Internet-Draft                    VALID                     January 2010
+
+
+14.  References
+
+14.1.  Normative References
+
+   [RFC2119]  "Key words for use in RFCs to Indicate Requirement
+              Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC3023]  Murata, M., St. Laurent, S., and D. Kohn, "XML Media
+              Types", RFC 3023, January 2001.
+
+   [RFC3688]  Mealling, M., "The IETF XML Registry", BCP 81, RFC 3688,
+              January 2004.
+
+   [RFC4288]  Freed, N. and J. Klensin, "Media Type Specifications and
+              Registration Procedures", BCP 13, RFC 4288, December 2005.
+
+   [SAML]     Cantor, S., Kemp, J., Philpott, R., and E. Maler, "WS-
+              Trust 1.4", URL: http://docs.oasis-open.org/security/saml/
+              v2.0/saml-core-2.0-os.pdf, OASIS Standard Specification,
+              March 2005.
+
+   [SOAP]     Gudgin, M., "Simple Object Access Protocol 1.2",
+              URL: http://www.w3.org/TR/soap12-part1/,
+              W3C Recommendation, April 2007.
+
+   [WS-Security]
+              Nadalin, A., Kaler, C., Monzillo, R., and P. Hallam-Baker,
+              "Web Services Security: SOAP Message Security 1.1", URL:
+               http://www.oasis-open.org/committees/download.php/16790/
+              wss-v1.1-spec-os-SOAPMessageSecurity.pdf, OASIS Standard
+              Specification, Feb 2006.
+
+   [WS-Trust]
+              Nadalin, A., Goodner, M., Gudgin, M., Barbir, A., and H.
+              Granqvist, "WS-Trust 1.4", URL: http://
+              docs.oasis-open.org/ws-sx/ws-trust/v1.4/ws-trust.html,
+              OASIS Standard Specification, Feb 2009.
+
+   [WSS_UsernameTokenProfile]
+              Nadalin, A., Kaler, C., Monzillo, R., and P. Hallam-Baker,
+              "Web Services Security UsernameToken Profile 1.1", URL:
+               http://docs.oasis-open.org/wss/v1.1/
+              wss-v1.1-spec-os-UsernameTokenProfile.pdf, OASIS Standard
+              Specification, Feb 2006.
+
+   [XMLDSIG]  Eastlake, D., "XML-Signature Syntax and Processing",
+              URL: http://www.w3.org/TR/2002/REC-xmldsig-core-20020212/,
+              W3C Recommendation, February 2002.
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 28]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   [XMLENC]   Eastlake, D., "XML Encryption Syntax and Processing.",
+              URL: http://www.w3.org/TR/xmlenc-core/,
+              W3C Recommendation, December 2002.
+
+14.2.  Informative References
+
+   [HOTP]     MRaihi, D., Bellare, M., Hoornaert, F., Naccache, D., and
+              O. Ranen, "HOTP: An HMAC-Based One Time Password
+              Algorithm", RFC 4226, December 2005.
+
+   [OATH]     "Initiative for Open AuTHentication",
+              URL: http://www.openauthentication.org.
+
+   [OCRA]     MRaihi, D., Rydell, J., Naccache, D., Machani, S., and S.
+              Bhajaj, "OCRA: OATH Challenge-Response Algorithms", URL:
+               http://docs.oasis-open.org/security/saml/v2.0/
+              saml-core-2.0-os.pdf, IETF Standard draft, January 2008.
+
+   [PSKC]     Hoyer, P., Pei, M., and S. Machani, "Portable Symmetric
+              Key Container (PSKC)",
+              URL: http://tools.ietf.org/html/
+              draft-ietf-keyprov-pskc-05, IETF Standard draft,
+              January 2010.
+
+   [RFC2396]  Berners-Lee, T., Berners-Lee, T., Fielding, R., and L.
+              Masinter, "Uniform Resource Identifiers (URI): Generic
+              Syntax", BCP 26, RFC 2396, August 1998.
+
+   [RFC5226]  Narten, T. and H. Alvestrand, "Guidelines for Writing an
+              IANA Considerations Section in RFCs", BCP 26, RFC 5226,
+              May 2008.
+
+   [XMLNS]    "Namespaces in XML", W3C Recommendation ,
+              URL: http://www.w3.org/TR/1999/REC-xml-names-19990114,
+              January 1999.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 29]
+
+Internet-Draft                    VALID                     January 2010
+
+
+Appendix A.  WSDL
+
+   The validation server WSDL is shown here.
+
+ <?xml version="1.0" encoding="utf-8"?>
+ <definitions targetNamespace="urn:ietf:params:xml:ns:valid"
+ xmlns:valid="urn:ietf:params:xml:ns:valid"
+ xmlns:pskc="urn:ietf:params:xml:ns:keyprov:pskc"
+ xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+ xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+ xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+ xmlns:wss="http://docs.oasis-open.org/wss/2004/01/
+ oasis-200401-wss-wssecurity-secext-1.0"
+ xmlns:wst="http://docs.oasis-open.org/ws-sx/ws-trust/200512"
+ xmlns:wst14="http://docs.oasis-open.org/ws-sx/ws-trust/200802"
+ xmlns:wsp="http://www.w3.org/ns/ws-policy"
+ xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types>
+   <xsd:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+   xmlns:valid="urn:ietf:params:xml:ns:valid"
+   xmlns:wss="http://docs.oasis-open.org/wss/2004/01/
+   oasis-200401-wss-wssecurity-secext-1.0"
+   xmlns:wst="http://docs.oasis-open.org/ws-sx/ws-trust/200512"
+   xmlns:wst14="http://docs.oasis-open.org/ws-sx/ws-trust/200802"
+   xmlns:wsp="http://www.w3.org/ns/ws-policy"
+   xmlns:WSDL="http://schemas.xmlsoap.org/wsdl/"
+   targetNamespace="urn:ietf:params:xml:ns:valid"
+   elementFormDefault="unqualified"
+   attributeFormDefault="unqualified">
+    <xsd:element name="RequestSecurityToken"
+    type="wst:RequestSecurityTokenType"/>
+    <xsd:element name="RequestSecurityTokenResponse"
+    type="wst:RequestSecurityTokenResponseType"/>
+    <xsd:element name="OTP" type="xsd:string"/>
+    <xsd:element name="NextOTP" type="xsd:string"/>
+    <xsd:element name="SyncCounter" type="xsd:integer"/>
+    <xsd:element name="SyncTime" type="xsd:integer"/>
+    <xsd:element name="KeyId" type="pskc:string"/>
+    <xsd:element name="DeviceInfo" type="pskc:DeviceInfo"/>
+   </xsd:schema>
+  </types>
+  <message name="RequestSecurityToken">
+   <part name="request" element="valid:RequestSecurityToken"/>
+  </message>
+  <message name="RequestSecurityTokenResponse">
+   <part name="response" element="valid:RequestSecurityTokenResponse"/>
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 30]
+
+Internet-Draft                    VALID                     January 2010
+
+
+  </message>
+  <portType name="RequestSecurityToken">
+   <operation name="RequestSecurityTokenStart">
+    <input message="RequestSecurityToken"/>
+    <output message="RequestSecurityTokenResponse"/>
+   </operation>
+   <operation name="RequestSecurityTokenContinue">
+    <input message="RequestSecurityTokenResponse"/>
+    <output message="RequestSecurityTokenResponse"/>
+   </operation>
+  </portType>
+  <binding name="RequestSecurityTokenBinding"
+  type="valid:RequestSecurityToken">
+   <SOAP:binding style="rpc"
+   transport="http://schemas.xmlsoap.org/soap/http"/>
+   <operation name="RequestSecurityTokenStart">
+    <SOAP:operation style="rpc"/>
+    <input>
+     <SOAP:body use="literal" namespace="urn:ietf:params:xml:ns:valid"/>
+    </input>
+    <output>
+     <SOAP:body use="literal" namespace="urn:ietf:params:xml:ns:valid"/>
+    </output>
+   </operation>
+   <operation name="RequestSecurityTokenContinue">
+    <SOAP:operation style="rpc"/>
+    <input>
+     <SOAP:body use="literal" namespace="urn:ietf:params:xml:ns:valid"/>
+    </input>
+    <output>
+     <SOAP:body use="literal" namespace="urn:ietf:params:xml:ns:valid"/>
+    </output>
+   </operation>
+  </binding>
+  <service name="RequestSecurityToken">
+   <port name="RequestSecurityTokenStart"
+   binding="RequestSecurityTokenBinding">
+    <SOAP:address
+    location="http://localhost:8080/RequestSecurityTokenService"/>
+   </port>
+   <port name="RequestSecurityTokenContinue"
+   binding="RequestSecurityTokenBinding">
+    <SOAP:address
+    location="http://localhost:8080/RequestSecurityTokenService"/>
+   </port>
+  </service>
+ </definitions>
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 31]
+
+Internet-Draft                    VALID                     January 2010
+
+
+Appendix B.  Mechanism specific message contents
+
+   The follwing subsections describe the mechanism specific message
+   contents for each considered mechanism:
+
+B.1.  Username/password
+
+   This section describes the mechanism-specific message contents
+   username/password transferred in-band.  There are no semantics
+   implied by the order of the elements.  The username and password
+   transmission uses the web services security Username Token Profile
+   [WSS_UsernameTokenProfile].
+
+   There are two steps to the protocol.
+
+   Step 1 - Client sends "request security token" message containing
+   authentication data to the validation server.
+
+ <wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wss:UsernameToken>
+        <wss:Username> ... </wss:Username> ?
+        <wss:Password Type="...">Password</wss:Password>
+    </wss:UsernameToken>
+</wst:RequestSecurityToken>
+
+   <wst:RequestSecuityToken/wss:UsernameToken/wss:Username>  If present,
+      the client MUST set the value to the claimed username.  The server
+      MUST load the corresponding end-user record.  Either the <wss:
+      Username> element or the <valid:KeyId> element or both MUST be
+      present.
+
+   <wst:RequestSecuityToken/wss:UsernameToken/wss:Password>  The client
+      MUST set the value to password entered by the end user.  The
+      server MUST validate the password.
+
+   The server MUST confirm that all the supplied authentication data are
+   valid for a single end-user.
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 32]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   Step 2 - Validation server sends "request security token response"
+   message containing the authentication result to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+B.2.  In band one-time-password (OTP)
+
+   This section describes the mechanism-specific message contents for
+   both time-based and event-based OTP protocols in which the OTP is
+   transferred in-band.  There are no semantics implied by the order of
+   the elements.
+
+   There are two steps to the protocol.
+
+   Step 1 - Client sends "request security token" message containing
+   authentication data to the validation server.
+
+ <wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wss:UsernameToken>
+        <wss:Username> ... </wss:Username> ?
+        <valid:KeyId> ... </valid:KeyId> ?
+        <pskc:DeviceInfo> ...</pskc:DeviceInfo> ?
+        <valid:OTP> ... </valid:OTP>
+    </wss:UsernameToken>
+</wst:RequestSecurityToken>
+
+   <wst:RequestSecuityToken/wss:UsernameToken/wss:Username>  If present,
+      the client MUST set the value to the claimed username.  The server
+      MUST load the corresponding end-user record.  Either the <wss:
+      Username> element or the <valid:KeyId> element or both MUST be
+      present.
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 33]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   <wst:RequestSecuityToken/wss:UsernameToken/valid:KeyId>  If present,
+      the client MUST set the value to the KeyId of the key used for OTP
+      computations.  The server MUST load the corresponding key record..
+
+   <wst:RequestSecuityToken/wss:UsernameToken/pskc:DeviceInfo>  If
+      present, the client MUST set the subelement values of pskc:
+      DeviceInfo as defined in [PSKC] to value that uniuquely identify
+      the device used for OTP computations.  The server MUST load the
+      corresponding device record..
+
+   <wst:RequestSecuityToken/wss:Security/valid:OTP>  The client MUST set
+      the value to the OTP value.  The server MUST validate the OTP.
+
+   The server MUST confirm that all the supplied authentication data are
+   valid for a single end-user.
+
+   Step 2 - Validation server sends "request security token response"
+   message containing the authentication result to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+   The following authentication data are defined by this specification.
+
+      Name: valid:OTP
+
+      Type: xsd:string
+
+      Description: The output value of an end-user OTP token
+
+      Name: valid:KeyId
+
+      Type: xsd:string
+
+      Description: The globally-unique identifier for key used in the
+      OTP computation
+
+      Name: pskc:DeviceInfo
+
+      Type: pskc:DeviceInfo
+
+      Description: A extensible element to uniquely identify devices
+      used in OTP computations as defined in [PSKC].
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 34]
+
+Internet-Draft                    VALID                     January 2010
+
+
+B.3.  In band one-time-password (OTP) token synchronization
+
+   This section describes the mechanism-specific message contents for
+   both time-based, event-based and time-event based OTP algorithms in
+   which resynchronization data is sent in-band.
+
+   Synchronization can happen either by sending two subsequqnt OTPs from
+   the device or by sending only one OTP and the exact values of one or
+   multiple moving factors (e.g.Counter, TIme, etc) used in the OTP
+   algorithm.
+
+   There are two steps to the protocol.
+
+   Step 1 - Client sends "request security token" message containing
+   synchronization data to the validation server.
+
+ <wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+urn:ietf:params:xml:ns:valid#synchronization
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wss:UsernameToken>
+        <wss:Username> ... </wss:Username> ?
+        <valid:KeyId> ... </valid:KeyId> ?
+        <pskc:DeviceInfo> ...</pskc:DeviceInfo> ?
+        <valid:OTP> ... </valid:OTP>
+        <valid:NextOTP> ... </valid:NextOTP>?
+        <valid:SyncCounter> ... </valid:SyncCounter>?
+        <valid:SyncTimer> ... </valid:SyncTime>?
+    </wss:UsernameToken>
+</wst:RequestSecurityToken>
+
+   <wst:RequestSecuityToken/wss:UsernameToken/wss:Username>  If present,
+      the client MUST set the value to the claimed username.  The server
+      MUST load the corresponding end-user record.  Either the <wss:
+      Username> element or the <valid:KeyId> element or both MUST be
+      present.
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 35]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   <wst:RequestSecuityToken/wss:UsernameToken/valid:KeyId>  If present,
+      the client MUST set the value to the KeyId of the key used for OTP
+      computations.  The server MUST load the corresponding key record..
+
+   <wst:RequestSecuityToken/wss:UsernameToken/pskc:DeviceInfo>  If
+      present, the client MUST set the subelement values of pskc:
+      DeviceInfo as defined in [PSKC] to value that uniuquely identify
+      the device used for OTP computations.  The server MUST load the
+      corresponding device record..
+
+   <wst:RequestSecuityToken/wss:Security/valid:OTP>  The client MUST set
+      the value to the OTP value.  The server MUST validate the OTP
+      within an extended synchronization window.
+
+   <wst:RequestSecuityToken/wss:Security/valid:NextOTP>  If present, the
+      client MUST set this value to the next OTP value obtained from the
+      OTP device.  The server MUST validate this OTP within a normal
+      validation window upon successful validation of the first OTP.
+
+   <wst:RequestSecuityToken/wss:Security/valid:SyncCounter>  If present,
+      the client MUST set the value to the current OTP Counter moving
+      factor from the claimed device.  The server MUST validate that the
+      given OTP corresponds to the given value in <valid:SyncCounter>
+      and then set the Counter moving factor value to its own record for
+      the claimed token.
+
+   <wst:RequestSecuityToken/wss:Security/valid:SyncTime>  If present,
+      the client MUST set the value to the current OTP Time moving
+      factor from the claimed device.  The server MUST validate that the
+      given OTP corresponds to the given value in <valid:SyncTime> and
+      then set the Time moving factor value to its own record for the
+      claimed token.
+
+   The server MUST confirm that all the supplied synchronization data
+   are valid and adjust its token record with the validated client data.
+
+   Step 2 - Validation server sends "request security token response"
+   message containing the synchronization result to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+   The following synchronization data are defined by this specification.
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 36]
+
+Internet-Draft                    VALID                     January 2010
+
+
+      Name: valid:OTP
+
+      Type: xsd:string
+
+      Description: The output value of an end-user OTP token
+
+      Name: valid:NextOTP
+
+      Type: xsd:string
+
+      Description: The output value of an end-user OTP token for the
+      next consecutive OTP
+
+      Name: valid:MovingFactor
+
+      Type: xsd:integer
+
+      Description: The current OTP moving factor in a client token.  It
+      is the event counter for an event based token, for example, HOTP.
+
+      Name: valid:KeyId
+
+      Type: xsd:string
+
+      Description: The globally-unique identifier for the OTP token
+
+B.4.  In band challenge/response
+
+   This appendix describes the mechanism-specific message contents for
+   challenge/response authentication mechanisms in which both the
+   challenge and response are transferred in-band.  Mechanisms of this
+   type include: knowledge-based schemes, matrix card schemes and
+   cryptographic token schemes.  There are no semantics implied by the
+   order of the elements.
+
+   There are four steps to the protocol.
+
+   Step 1 - Client sends "request security token" message containingthe
+   claimed identity to the validation server.
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 37]
+
+Internet-Draft                    VALID                     January 2010
+
+
+ <wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wss:UsernameToken>
+        <wss:Username> ... </wss:Username> ?
+        <valid:KeyId> ... </valid:KeyId> ?
+        <pskc:DeviceInfo> ...</pskc:DeviceInfo> ?
+    </wss:UsernameToken>
+</wst:RequestSecurityToken>
+
+   Step 2 - Validation server sends "request security token response"
+   message containing the challenge to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst14:InteractiveChallenge>
+           ...
+       </wst14:InteractiveChallenge>
+   </wst:RequestSecurityTokenResponse>
+
+   <wst:RequestSecurityTokenResponse/wst14:InteractiveChallenge>  The
+      server MUST set the contents to the value of the challenge.
+
+   Step 3 - Client sends "request security token response" message
+   containing the response to the server.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst14:InteractiveChallengeResponse>
+           ...
+       </wst14:InteractiveChallengeResponse>
+   </wst:RequestSecurityTokenResponse>
+
+   <wst:RequestSecurityTokenReponse/wst14:InteractiveChallengeResponse>
+      The client MUST set the value to the transformed challenge.  The
+      server MUST validate the transformed challenge.
+
+   Step 4 - Server sends "request security token response" message
+   containing the authentication result to the client.
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 38]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+B.5.  Out-of-band challenge
+
+   This appendix describes the mechanism-specific message contents for
+   challenge/response mechanisms in which the challenge is passed to the
+   end-user out-of-band.  Such mechanisms involve a separate
+   communication channel, such as voice telephone, email or SMS.  There
+   are no semantics implied by the order of the elements.
+
+   There are four steps to the protocol.
+
+   Step 1 - Client sends "request security token" message containing
+   claimed identity to the server.
+
+<wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wss:UsernameToken>
+        <wss:Username> ... </wss:Username>
+        <valid:KeyId> ... </valid:KeyId> ?
+    </wss:UsernameToken>
+</wst:RequestSecurityToken>
+
+   Step 2 - (Optional, in the asynchronous case) Server sends "pending"
+   to the client.
+
+   <env:Body/env:Fault>
+           valid:Pending
+   </env:Body/env:Fault>
+
+   Both the client and server close the session.
+
+   Step 3 - Once the client receives the response, it sends the "request
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 39]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   security token response" message to the server..
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst14:InteractiveChallengeResponse>
+           ...
+       </wst14:InteractiveChallengeResponse>
+   </wst:RequestSecurityTokenResponse>
+
+   Step 4 - Server sends "request security token response" message
+   containing the authentication result to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+   The <wst:RequestSecurityTokenResponse/@Context> attribute value MUST
+   be the same as that used in steps 1, 2 and 3.
+
+B.6.  Out-of-band response
+
+   This appendix describes the mechanism-specific message contents for
+   challenge/response mechanisms in which the response is returned to
+   the validation server out-of-band.  Such mechanisms involve a
+   separate communication channel, such as voice telephone, email or
+   SMS.  There are no semantics implied by the order of the elements.
+
+   There are four steps to the protocol.
+
+   Step 1 - Client sends "request security token" message containing the
+   claimed identity to the server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 40]
+
+Internet-Draft                    VALID                     January 2010
+
+
+<wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wss:UsernameToken>
+        <wss:Username> ... </wss:Username>
+        <valid:KeyId> ... </valid:KeyId> ?
+        <pskc:DeviceInfo> ...</pskc:DeviceInfo> ?
+    </wss:UsernameToken>
+</wst:RequestSecurityToken>
+
+   Step 2 - Server sends "request security token response" message
+   containing the challenge to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst14:InteractiveChallenge>
+           ...
+       </wst14:InteractiveChallenge>
+   </wst:RequestSecurityTokenResponse>
+
+   Step 3 - (Optional - in the asynchronous case) Client sends "pending"
+   to the server.
+
+   <env:Body/env:Fault>
+           valid:Pending
+   </env:Body/env:Fault>
+
+   Both the client and server close the session.
+
+   Step 4 - Server sends "request security token response" message
+   containing the authentication result to the client at the registered
+   call-back interface.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 41]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   The <wst:RequestSecurityTokenResponse/@Context> attribute value MUST
+   be the same as that used in steps 1, 2 and 3.
+
+B.7.  Client supplies challenge
+
+   This appendix describes the mechanism-specific message contents for
+   challenge/response mechanisms in which the client supplies the
+   challenge.  There are no semantics implied by the order of the
+   elements.
+
+   There are two steps to the protocol.
+
+   Step 1 - Client sends "request security token" message to the
+   validation server, passing both the challenge and the response.
+
+<wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wst14:InteractiveChallenge> ...
+    </ wst14:InteractiveChallenge>
+    <wst14:InteractiveChallengeResponse> ...
+    </ wst14:InteractiveChallengeResponse>
+</wst:RequestSecurityToken>
+
+   <wst14:InteractiveChallenge>  The challenge.  This may have been
+      obtained from the validation server by means of another interface;
+      one not specified here.
+
+   <wst14:InteractiveChallengeResponse>  The client MUST set the value
+      to the transformed challenge.  The server MUST validate the
+      transformed challenge.
+
+   Step 2 - Validation server returns "request security token response"
+   message containing the assertion and claims to the client.
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 42]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+B.8.  Challenge/response with signature
+
+   This appendix describes the mechanism-specific message contents for
+   challenge/response authentication mechanisms in which both the
+   challenge and response are transferred in-band additionally to other
+   parameters that are used in a signature (such as the simmetric
+   signature in [OCRA].  There are no semantics implied by the order of
+   the elements.
+
+   There are four steps to the protocol.
+
+   Step 1 - Client sends "request security token" message containingthe
+   claimed identity to the validation server.
+
+ <wst:RequestSecurityToken Context="...">
+    <wst:TokenType>
+http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0
+    </wst:TokenType>
+    <wst:RequestType>
+http://www.docs.oasis-open.org/ws-sx/ws-trust/200512/Issue
+    </wst:RequestType>
+    <wsp:AppliesTo> ... </wsp:AppliesTo> ?
+    <wsp:Policy> ?
+        <saml:Attribute> +
+    </wsp:Policy>
+    <wst:Lifetime> ... </wst:Lifetime> ?
+    <wss:UsernameToken>
+        <wss:Username> ... </wss:Username> ?
+        <valid:KeyId> ... </valid:KeyId> ?
+        <pskc:DeviceInfo> ...</pskc:DeviceInfo> ?
+    </wss:UsernameToken>
+</wst:RequestSecurityToken>
+
+   Step 2 - Validation server sends "request security token response"
+   message containing the set of challenges to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst14:InteractiveChallenge> +
+           ...
+       </wst14:InteractiveChallenge>
+   </wst:RequestSecurityTokenResponse>
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 43]
+
+Internet-Draft                    VALID                     January 2010
+
+
+   <wst:RequestSecurityTokenResponse/wst14:InteractiveChallenge>  The
+      server MUST set the contents to the value of the challenge(s).
+
+   Step 3 - Client sends "request security token response" message
+   containing the response(s) to the server.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst14:InteractiveChallengeResponse> +
+           ...
+       </wst14:InteractiveChallengeResponse>
+   </wst:RequestSecurityTokenResponse>
+
+   <wst:RequestSecurityTokenReponse/wst14:InteractiveChallengeResponse>
+      The client MUST set the value to the parameters of the signature
+      (e.g. amount is set to '10000').  The server MUST validate the
+      transformed challenge.
+
+   Step 4 - Server sends "request security token response" message
+   containing the authentication result to the client.
+
+   <wst:RequestSecurityTokenResponse Context="...">
+       <wst:RequestedSecurityToken>
+           <saml:Assertion> ... </saml:Assertion>
+       </wst:RequestedSecurityToken>
+       <wst:Claims> ... </wst:Claims>
+   </wst:RequestSecurityTokenResponse>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 44]
+
+Internet-Draft                    VALID                     January 2010
+
+
+Appendix C.  Use Cases
+
+   This section describes a comprehensive list of use cases that
+   inspired the development of this specification.  These requirements
+   were used to derive the primary requirement that drove the design.
+   These requirements are covered in the next section.
+
+   These use cases also help in understanding the applicability of this
+   specification to real world situations.
+
+C.1.  Validation
+
+C.1.1.  OTP Validation
+
+   An application needs to validate an OTP obtained from an end-user,
+   before providing the end-user with access to the requested
+   resource(s).  The validation request may pass through several SOAP
+   intermediaries.  If this is the case, the application message needs
+   to specify the ultimate validation server endpoint via SOAP
+   addressing means, e.g., by using SOAP actors, to avoid the OTP being
+   evaluated several times.  The response may include additional
+   instructions to the token, for example that it needs to be
+   resynchronized.  This information must be defined inside a SOAP
+   message.
+
+   Valid credentials that can be passed in the valildation request:
+
+   o  Username, PIN + OTP
+
+   o  Username, OTP
+
+   o  TokenId + OTP
+
+   o  Array of TokenId + OTP
+
+C.1.2.  Challenge/Response Validation - Server generated challenge
+
+   An application needs to be able to use a token implementing the OCRA
+   challenge/response algorithm for identifying the end user.  The
+   application requests from the validation server the challenge to be
+   presented to the token (with the end-user keying the challenge into
+   the token by means of a PINPad) or the challenge presented to the API
+   of the connected token The application then uses the protocol to
+   verify the response from the token
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 45]
+
+Internet-Draft                    VALID                     January 2010
+
+
+C.1.3.  Challenge/Response Validation - User generated challenge
+
+   An application needs to be able to use a token implementing the OCRA
+   challenge/response algorithm for identifying the end user.  The
+   application generates the challenge to be presented to the token
+   (with the end-user keying the challenge into the token by means of a
+   PINPad) or the challenge presented to the API of the connected token
+   The application then uses the protocol to verify the challenge and
+   the response from the token.
+
+C.1.4.  2-way mutual Challenge/Response Validation
+
+   An application needs to be able to use a token implementing the OCRA
+   2 way challenge/response algorithm for identifying the end user and
+   the user will identify the validation server.  A connected token
+   generates a client challenge and trasnmits it to the appllication,
+   the application will accept the challenge and send it to the
+   validation server, which will then return a server-response to the
+   client challenge and a server challenge.  The connected token will
+   verify the server response and after successfully validating the
+   server response sends uses the server-challenge to generate a client-
+   response which is sent to the appliaction.  The application then uses
+   the protocol to verify the the response from the connected client.
+
+C.1.5.  OTP Validation + Server managed PIN
+
+   An application needs to be able to use a token implementing the TOTP
+   algorithm as one factor and a server managed PIN as a second factor,
+   for indetifying the end user.  The verification of both factors
+   should occur within one message request/response pair of the
+   protocol.
+
+C.1.6.  MatrixCardValidation - Server generated challenge
+
+   An application needs to be able to use MatrixCard challenge/response
+   algorithm for identifying the end user.  The application will request
+   from the validation server the challenge to be presented to the user
+   via the user interface and the user response entered into a webform
+   The application will then use the protocol to verify the response
+   from the token
+
+C.2.  Synchronisation Use Cases
+
+   This section describes the use cases relating to synchronisation of
+   the token and the server.
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 46]
+
+Internet-Draft                    VALID                     January 2010
+
+
+C.2.1.  OTP Token Resync with the Next OTPs
+
+   An application needs to validate an OTP but the OTP could not be
+   validated because the OTP moving factor is out-of-sync between the
+   token and the server.  The validation server detects that the given
+   OTP corresponds to a future moving factor that falls in an acceptable
+   re-sync window.  The application decides that a re-sync is necessary.
+   It asks the next generated OTP from the token to re-sync the token.
+   The validation server adjusts its record of the token's moving factor
+   to the one that corresponds to the given OTP upon successful
+   validation.  Two consecutive OTPs could also be directly used for a
+   validation server to re-sync a token, where the server tries to match
+   the first OTP with an extended synchronization window and then match
+   the second OTP with a normal authentication window.
+
+C.2.2.  OTP Token Resync with Moving Factor
+
+   An application needs to validate an OTP but the OTP could not be
+   validated because the OTP moving factor is out-of-sync between the
+   token and the server.  The validation server detects that the given
+   OTP corresponds to a future moving factor that falls in an acceptable
+   re-sync window.  The application decides that a re-sync is necessary.
+   It uses values that can be read by the user of the token (e.g. event
+   counter value, time interval counter value) to re-sync the token
+   together with the next generated OTP of the token.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 47]
+
+Internet-Draft                    VALID                     January 2010
+
+
+Appendix D.  Requirements
+
+   This section outlines the most relevant requirements that are the
+   basis of this work.  Several of the requirements were derived from
+   use cases described above.
+
+   R1:  The protocol must support authentication of request originator.
+
+   R2:  The protocol must support management data flows (e.g., related
+        to token synchronization)
+
+   R3:  The protocol needs to support the following algorithms
+
+        *  HOTP
+
+        *  OCRA
+
+        *  TOTP
+
+        *  Proprietary OTP
+
+        *  Proprietary Challenge/Response
+
+        *  Matrix cards
+
+        *  SMS OTP
+
+        *  PKI based challenge/response
+
+   R4:  The protocol must be XML/Web Services based.
+
+   R5:  The protocol must support SOAP intermediaries.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 48]
+
+Internet-Draft                    VALID                     January 2010
+
+
+Authors' Addresses
+
+   Philip Hoyer
+   ActivIdentity, Inc.
+   117 Waterloo Road
+   London, SE1  8UL
+   UK
+
+   Phone: +44 (0) 20 7744 6455
+   Email: phoyer@actividentity.com
+
+
+   Tim Moses
+   Entrust, Inc.
+   1000 Innovation Drive
+   Ottawa, Ontario  K2K 3E7
+   Canada
+
+   Phone: +1 (613) 270-3400
+   Email: tim.mosesi@entrust.com
+
+
+   Mingliang Pei
+   VeriSign, Inc.
+   487 E. Middlefield Road
+   Mountain View, CA  94043
+   USA
+
+   Phone: +1 650 426 5173
+   Email: mpei@verisign.com
+
+
+   Salah Machani
+   Diversinet, Inc.
+   2225 Sheppard Avenue East
+   Suite 1801
+   Toronto, Ontario  M2J 5C2
+   Canada
+
+   Phone: +1 416 756 2324 Ext. 321
+   Email: smachani@diversinet.com
+
+
+
+
+
+
+
+
+
+
+Hoyer, et al.             Expires July 31, 2010                [Page 49]
+
