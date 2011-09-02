@@ -42,4 +42,4 @@ class Hotp(unittest.TestCase):
             self.assertEqual(d, deci)
             self.assertEqual(h,  hexa)
             self.assertEqual(d6, trunc)
-            accept_hotp(self.secret, trunc, counter)
+            self.assertTrue(accept_hotp(self.secret, trunc, counter))
