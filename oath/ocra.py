@@ -13,6 +13,13 @@ import hotp
 
 __ALL__ = ('str2ocrasuite')
 
+def is_int(v):
+    try:
+        int(v)
+        return True
+    except ValueError:
+        return False
+
 # Constants
 PERIODS = { 'H': 3600, 'M': 60, 'S': 1 }
 HOTP = 'HOTP'
@@ -27,7 +34,7 @@ class CryptoFunction(object):
     def __call__(self, key, data_input):
         h = hmac.new(key, data_input, self.hash_algo).digest()
         if self.truncation_length:
-            return str(hotp.truncated_value(h))[-self.truncation_length:]
+            return hotp.dec(h, self.truncation_length)
         else:
             return str(hotp.truncated_value(h))
 
@@ -70,20 +77,24 @@ class DataInput:
 
     __slots__ = [ 'ocrasuite', 'C', 'Q', 'P', 'S', 'T' ]
 
-    def __init__(self, ocrasuite, C=None, Q=None, P=None, S=None, T=None):
-        self.ocrasuite = ocrasuite
+    def __init__(self, C=None, Q=None, P=None, S=None, T=None):
         self.C = C
         self.Q = Q
         self.P = P
         self.S = S
         self.T = T
 
-    def __call__(self, C=None, Q=None, P=None, S=None, T=None):
-        datainput = self.ocrasuite + '\0'
+    def __call__(self, C=None, Q=None, P=None, P_digest=None, S=None, T=None,
+            T_precomputed=None):
+        datainput = ''
         if self.C:
-            if C is None or not isinstance(C, int) or C < 0 or C > 2**64:
+            try:
+                C = int(C)
+                if C < 0 or C > 2**64:
+                    raise Exception()
+            except:
                 raise ValueError, ('Invalid counter value', C)
-            datainput += hotp.int2beint64(C)
+            datainput += hotp.int2beint64(int(C))
         if self.Q:
             if Q is None or not isinstance(Q, str) or len(Q) > self.Q[1]:
                 raise ValueError, 'challenge'
@@ -96,20 +107,39 @@ class DataInput:
                     int(Q, 16)
                 except ValueError:
                     raise ValueError, 'challenge'
+            if self.Q[0] == 'N':
+                Q = hex(int(Q))[2:]
+                Q += '0' * (len(Q) % 2)
+                Q = Q.decode('hex')
+            if self.Q[0] == 'A':
+                pass
+            if self.Q[0] == 'H':
+                Q = Q.decode('hex')
             datainput += Q
-            datainput += '0' * (128-len(Q))
+            datainput += '\0' * (128-len(Q))
         if self.P:
-            if P is None:
-                raise ValueError, 'Pin/Password'
-            datainput += self.P(P).digest()
+            if P_digest:
+                if len(P) == self.P.digest_size:
+                    datainput += P_digest
+                elif len(P) == 2*self.P.digest_size:
+                    datainput += P_digest.decode('hex')
+                else:
+                    raise ValueError, ('Pin/Password digest invalid', P_digest)
+            elif P is None:
+                raise ValueError, 'Pin/Password missing'
+            else:
+                datainput += self.P(P).digest()
         if self.S:
             if S is None or len(S) != self.S:
                 raise ValueError, 'session'
             datainput += S
         if self.T:
-            if not isinstance(T, int):
+            if is_int(T_precomputed):
+                datainput += hotp.int2beint64(int(T_precomputed))
+            elif is_int(T):
+                datainput += hotp.int2beint64(int(T / self.T))
+            else:
                 raise ValueError, 'timestamp'
-            datainput += hotp.int2beint64(int(T / self.T))
         return datainput
 
     def __str__(self):
@@ -165,16 +195,19 @@ def str2datainput(datainput_description):
                 raise ValueError, ('Invalid timestamp descriptor', element)
         else:
             raise ValueError, ('Invalid datainput descriptor', element)
-    return DataInput(datainput_description, **datainputs)
+    return DataInput(**datainputs)
 
 
 class OcraSuite(object):
-    def __init__(self, crypto_function, data_input):
+    def __init__(self, ocrasuite_description, crypto_function, data_input):
+        self.ocrasuite_description = ocrasuite_description
         self.crypto_function = crypto_function
         self.data_input = data_input
 
     def __call__(self, key, **kwargs):
-        return self.crypto_function(key, self.data_input(**kwargs))
+        data_input = self.ocrasuite_description + '\0' \
+                + self.data_input(**kwargs)
+        return self.crypto_function(key, data_input)
 
     def accept(self, response, key, **kwargs):
         return str(response) == self(key, **kwargs)
@@ -191,10 +224,96 @@ def str2ocrasuite(ocrasuite_description):
         raise ValueError, ('Unsupported OCRA identifier', elements[0])
     crypto_function = str2cryptofunction(elements[1])
     data_input = str2datainput(elements[2])
-    return OcraSuite(crypto_function, data_input)
+    return OcraSuite(ocrasuite_description, crypto_function, data_input)
 
 if __name__ == '__main__':
-    assert str2cryptofunction('HOTP-SHA256-6')
-    ocrasuite = str2ocrasuite('OCRA-1:HOTP-SHA256-6:C-QN08-PSHA1-S1-T')
-    print ocrasuite
-    print ocrasuite('coin', C=1, Q='123', P='324324', S='x', T=123)
+    key20 = '3132333435363738393031323334353637383930'.decode('hex')
+    key32 = '3132333435363738393031323334353637383930313233343536373839303132'\
+            .decode('hex')
+    key64 = '31323334353637383930313233343536373839303132333435363738393031323\
+334353637383930313233343536373839303132333435363738393031323334'.decode('hex')
+    pin = '1234'
+    pin_sha1 = '7110eda4d09e062aa5e4a390b0a572ac0d2c0220'.decode('hex')
+    tests = [ { 'ocrasuite': 'OCRA-1:HOTP-SHA1-6:QN08',
+                'key': key20,
+                'vectors': [
+                    {'params': { 'Q': '00000000' }, 'result': '237653' },
+                    {'params': { 'Q': '11111111' }, 'result': '243178' },
+                    {'params': { 'Q': '22222222' }, 'result': '653583' },
+                    {'params': { 'Q': '33333333' }, 'result': '740991' },
+                    {'params': { 'Q': '44444444' }, 'result': '608993' },
+                    {'params': { 'Q': '55555555' }, 'result': '388898' },
+                    {'params': { 'Q': '66666666' }, 'result': '816933' },
+                    {'params': { 'Q': '77777777' }, 'result': '224598' },
+                    {'params': { 'Q': '88888888' }, 'result': '750600' },
+                    {'params': { 'Q': '99999999' }, 'result': '294470' }
+                ]
+              },
+              { 'ocrasuite': 'OCRA-1:HOTP-SHA256-8:C-QN08-PSHA1',
+                'key': key32,
+                'vectors': [
+                    {'params': { 'C': 0, 'Q': '12345678' }, 'result': '65347737' },
+                    {'params': { 'C': 1, 'Q': '12345678' }, 'result': '86775851' },
+                    {'params': { 'C': 2, 'Q': '12345678' }, 'result': '78192410' },
+                    {'params': { 'C': 3, 'Q': '12345678' }, 'result': '71565254' },
+                    {'params': { 'C': 4, 'Q': '12345678' }, 'result': '10104329' },
+                    {'params': { 'C': 5, 'Q': '12345678' }, 'result': '65983500' },
+                    {'params': { 'C': 6, 'Q': '12345678' }, 'result': '70069104' },
+                    {'params': { 'C': 7, 'Q': '12345678' }, 'result': '91771096' },
+                    {'params': { 'C': 8, 'Q': '12345678' }, 'result': '75011558' },
+                    {'params': { 'C': 9, 'Q': '12345678' }, 'result': '08522129' }
+                ]
+              },
+              { 'ocrasuite': 'OCRA-1:HOTP-SHA256-8:QN08-PSHA1',
+                'key': key32,
+                'vectors': [
+                    {'params': { 'Q': '00000000' }, 'result': '83238735' },
+                    {'params': { 'Q': '11111111' }, 'result': '01501458' },
+                    {'params': { 'Q': '22222222' }, 'result': '17957585' },
+                    {'params': { 'Q': '33333333' }, 'result': '86776967' },
+                    {'params': { 'Q': '44444444' }, 'result': '86807031' }
+                ]
+              },
+              { 'ocrasuite': 'OCRA-1:HOTP-SHA512-8:C-QN08',
+                'key': key64,
+                'vectors': [
+                    {'params': { 'C': '00000', 'Q': '00000000' }, 'result': '07016083' },
+                    {'params': { 'C': '00001', 'Q': '11111111' }, 'result': '63947962' },
+                    {'params': { 'C': '00002', 'Q': '22222222' }, 'result': '70123924' },
+                    {'params': { 'C': '00003', 'Q': '33333333' }, 'result': '25341727' },
+                    {'params': { 'C': '00004', 'Q': '44444444' }, 'result': '33203315' },
+                    {'params': { 'C': '00005', 'Q': '55555555' }, 'result': '34205738' },
+                    {'params': { 'C': '00006', 'Q': '66666666' }, 'result': '44343969' },
+                    {'params': { 'C': '00007', 'Q': '77777777' }, 'result': '51946085' },
+                    {'params': { 'C': '00008', 'Q': '88888888' }, 'result': '20403879' },
+                    {'params': { 'C': '00009', 'Q': '99999999' }, 'result': '31409299' }
+                ]
+              },
+              { 'ocrasuite': 'OCRA-1:HOTP-SHA512-8:QN08-T1M',
+                'key': key64,
+                'vectors': [
+                    {'params': { 'Q': '00000000', 'T_precomputed': int('132d0b6', 16) },
+                        'result': '95209754' },
+                    {'params': { 'Q': '11111111', 'T_precomputed': int('132d0b6', 16) },
+                        'result': '55907591' },
+                    {'params': { 'Q': '22222222', 'T_precomputed': int('132d0b6', 16) },
+                        'result': '22048402' },
+                    {'params': { 'Q': '33333333', 'T_precomputed': int('132d0b6', 16) },
+                        'result': '24218844' },
+                    {'params': { 'Q': '44444444', 'T_precomputed': int('132d0b6', 16) },
+                        'result': '36209546' },
+                ]
+              },
+            ]
+
+    for test in tests:
+        ocrasuite = str2ocrasuite(test['ocrasuite'])
+        key = test['key']
+        for vector in test['vectors']:
+            params = vector['params']
+            result = vector['result']
+            if ocrasuite.data_input.P:
+                params['P'] = pin
+            assert ocrasuite(key, **params) == result
+
+
