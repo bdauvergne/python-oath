@@ -1,8 +1,9 @@
 import hmac
 import hashlib
 import re
-import binascii
 import hotp
+import random
+import string
 
 '''
     Implementation of OCRA
@@ -85,7 +86,7 @@ class DataInput:
         self.T = T
 
     def __call__(self, C=None, Q=None, P=None, P_digest=None, S=None, T=None,
-            T_precomputed=None):
+            T_precomputed=None, Qsc=None):
         datainput = ''
         if self.C:
             try:
@@ -96,7 +97,12 @@ class DataInput:
                 raise ValueError, ('Invalid counter value', C)
             datainput += hotp.int2beint64(int(C))
         if self.Q:
-            if Q is None or not isinstance(Q, str) or len(Q) > self.Q[1]:
+            max_length = self.Q[1]
+            if Qsc is not None:
+                # Mutual Challenge-Response
+                Q = Qsc
+                max_length *= 2
+            if Q is None or not isinstance(Q, str) or len(Q) > max_length:
                 raise ValueError, 'challenge'
             if self.Q[0] == 'N' and not Q.isdigit():
                 raise ValueError, 'challenge'
@@ -226,6 +232,117 @@ def str2ocrasuite(ocrasuite_description):
     data_input = str2datainput(elements[2])
     return OcraSuite(ocrasuite_description, crypto_function, data_input)
 
+class StateException(Exception):
+    pass
+
+DEFAULT_LENGTH = 20
+
+class OCRAChallengeResponse(object):
+    state = 1
+
+    def __init__(self, key, ocrasuite_description):
+        self.key = key
+        self.ocrasuite = str2ocrasuite(ocrasuite_description)
+        if not ocrasuite.data_input.Q:
+            raise ValueError, ('Ocrasuite must have a Q descriptor',)
+
+def compute_challenge(Q):
+    kind, length = Q
+    r = xrange(0, length)
+    if kind == 'N':
+        c = ''.join([random.choice(string.digits) for i in r])
+    elif kind == 'A':
+        alphabet = string.digits + string.letters
+        c = ''.join([random.choice(alphabet) for i in r])
+    elif kind == 'H':
+        c = ''.join([random.choice(string.hexdigits) for i in r])
+    else:
+        raise ValueError, ('Q kind is unknown:', kind)
+    return c
+
+class OCRAChallengeResponseVerifier(OCRAChallengeResponse):
+    SERVER_STATE_COMPUTE_CHALLENGE = 1
+    SERVER_STATE_VERIFY_RESPONSE = 2
+    SERVER_STATE_FINISHED = 3
+
+    def compute_challenge(self):
+        if self.state != self.SERVER_STATE_COMPUTE_CHALLENGE:
+            raise StateException()
+        self.challenge = compute_challenge(self.ocrasuite.data_input.Q)
+        self.state = self.SERVER_STATE_VERIFY_RESPONSE
+        return self.challenge
+
+    def verify_response(self, response, **kwargs):
+        if self.state != self.SERVER_STATE_VERIFY_RESPONSE:
+            return StateException()
+        c = self.ocrasuite(self.key, Q=self.challenge, **kwargs) == response
+        if c:
+            self.state = self.SERVER_STATE_FINISHED
+        return c
+
+
+class OCRAChallengeResponseClient(OCRAChallengeResponse):
+    def compute_response(self, challenge, **kwargs):
+        return self.ocrasuite(self.key, Q=self.challenge, **kwargs)
+
+class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
+    CLIENT_STATE_COMPUTE_CLIENT_CHALLENGE = 1
+    CLIENT_STATE_VERIFY_SERVER_RESPONSE = 2
+    CLIENT_STATE_COMPUTE_CLIENT_RESPONSE = 3
+    CLIENT_STATE_FINISHED = 4
+
+    def compute_client_challenge(self):
+        if self.state != self.CLIENT_STATE_COMPUTE_CLIENT_CHALLENGE:
+            raise StateException()
+        self.client_challenge = compute_challenge(self.ocrasuite.data_input.Q)
+        self.state = self.CLIENT_STATE_VERIFY_SERVER_RESPONSE
+        return self.client_challenge
+
+    def verify_server_response(self, response, challenge, **kwargs):
+        if self.state != self.CLIENT_STATE_VERIFY_SERVER_RESPONSE:
+            return StateException()
+        self.server_challenge = challenge
+        q = self.client_challenge+self.server_challenge
+        c = self.ocrasuite(self.key, Qsc=q, **kwargs) == response
+        if c:
+            self.state = self.CLIENT_STATE_COMPUTE_CLIENT_RESPONSE
+        return c
+
+    def compute_client_response(self, **kwargs):
+        if self.state != self.CLIENT_STATE_COMPUTE_CLIENT_RESPONSE:
+            return StateException()
+        q = self.server_challenge+self.client_challenge
+        rc = self.ocrasuite(self.key, Qsc=q, **kwargs)
+        self.state = self.CLIENT_STATE_FINISHED
+        return rc
+
+class OCRAMutualChallengeResponseServer(OCRAChallengeResponse):
+    SERVER_STATE_COMPUTE_SERVER_RESPONSE = 1
+    SERVER_STATE_VERIFY_CLIENT_RESPONSE = 2
+    SERVER_STATE_FINISHED = 3
+
+    def compute_server_response(self, challenge, **kwargs):
+        if self.state != self.SERVER_STATE_COMPUTE_SERVER_RESPONSE:
+            raise StateException()
+        self.client_challenge = challenge
+        self.server_challenge = compute_challenge(self.ocrasuite.data_input.Q)
+        q = self.client_challenge+self.server_challenge
+        # no need for pin with server mode
+        kwargs.pop('P', None)
+        kwargs.pop('P_digest', None)
+        rs = self.ocrasuite(self.key, Qsc=q, **kwargs)
+        self.state = self.SERVER_STATE_VERIFY_CLIENT_RESPONSE
+        return rs, self.server_challenge
+
+    def verify_client_response(self, response, **kwargs):
+        if self.state != self.SERVER_STATE_VERIFY_CLIENT_RESPONSE:
+            raise StateException()
+        q = self.server_challenge+self.client_challenge
+        c = self.ocrasuite(self.key, Qsc=q, **kwargs) == response
+        if c:
+            self.state = self.SERVER_STATE_FINISHED
+        return c
+
 if __name__ == '__main__':
     key20 = '3132333435363738393031323334353637383930'.decode('hex')
     key32 = '3132333435363738393031323334353637383930313233343536373839303132'\
@@ -316,4 +433,11 @@ if __name__ == '__main__':
                 params['P'] = pin
             assert ocrasuite(key, **params) == result
 
-
+    mut_suite = 'OCRA-1:HOTP-SHA256-8:QA08'
+    ocra_client = OCRAMutualChallengeResponseClient(key32, mut_suite)
+    ocra_server = OCRAMutualChallengeResponseServer(key32, mut_suite)
+    qc = ocra_client.compute_client_challenge()
+    rs, qs = ocra_server.compute_server_response(qc)
+    assert ocra_client.verify_server_response(rs, qs)
+    rc = ocra_client.compute_client_response()
+    assert ocra_server.verify_client_response(rc)
