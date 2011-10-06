@@ -12,7 +12,9 @@ import string
     See also http://tools.ietf.org/html/draft-mraihi-mutual-oath-hotp-variants-14
 '''
 
-__ALL__ = ('str2ocrasuite')
+__ALL__ = ('str2ocrasuite', 'StateException', 'OCRAChallengeResponseServer',
+    'OCRAChallengeResponseClient', 'OCRAMutualChallengeResponseServer',
+    'OCRAMutualChallengeResponseClient')
 
 def is_int(v):
     try:
@@ -260,7 +262,7 @@ def compute_challenge(Q):
         raise ValueError, ('Q kind is unknown:', kind)
     return c
 
-class OCRAChallengeResponseVerifier(OCRAChallengeResponse):
+class OCRAChallengeResponseServer(OCRAChallengeResponse):
     SERVER_STATE_COMPUTE_CHALLENGE = 1
     SERVER_STATE_VERIFY_RESPONSE = 2
     SERVER_STATE_FINISHED = 3
