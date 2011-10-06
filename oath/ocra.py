@@ -245,7 +245,7 @@ class OCRAChallengeResponse(object):
     def __init__(self, key, ocrasuite_description):
         self.key = key
         self.ocrasuite = str2ocrasuite(ocrasuite_description)
-        if not ocrasuite.data_input.Q:
+        if not self.ocrasuite.data_input.Q:
             raise ValueError, ('Ocrasuite must have a Q descriptor',)
 
 def compute_challenge(Q):
