@@ -45,11 +45,11 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
     '''
        Compute a HOTP value as prescribed by RFC4226
 
-       :params key: 
+       :param key: 
            the HOTP secret key given as an hexadecimal string
-       :params counter:
+       :param counter:
            the OTP generation counter
-       :params format:
+       :param format:
            the output format, can be:
               - hex, for a variable length hexadecimal format,
               - hex-notrunc, for a 40 characters hexadecimal non-truncated format,
@@ -58,7 +58,7 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
               - dec7, or
               - dec8
            it defaults to dec6.
-       :params hash:
+       :param hash:
            the hash module (usually from the hashlib package) to use,
            it defaults to hashlib.sha1.
 
@@ -97,19 +97,19 @@ def accept_hotp(key, response, counter, format='dec6', hash=hashlib.sha1,
        Validate a HOTP value inside a window of
        [counter-backward_drift:counter+forward_drift]
 
-       :params key:
+       :param key:
            the shared secret
        :type key:
            hexadecimal string of even length
-       :params response:
+       :param response:
            the OTP to check
        :type response:
            ASCII string
-       :params counter:
+       :param counter:
            value of the counter running inside an HOTP token, usually it is
            just the count of HOTP value accepted so far for a given shared
            secret; see the specifications of HOTP for more details;
-       :params format:
+       :param format:
            the output format, can be:
              - hex40, for a 40 characters hexadecimal format,
              - dec4, for a 4 characters decimal format,
@@ -117,12 +117,12 @@ def accept_hotp(key, response, counter, format='dec6', hash=hashlib.sha1,
              - dec7, or
              - dec8
            it defaults to dec6.
-       :params hash:
+       :param hash:
            the hash module (usually from the hashlib package) to use,
            it defaults to hashlib.sha1.
-       :params drift:
+       :param drift:
            how far we can look forward from the current value of the counter
-       :params backward_drift:
+       :param backward_drift:
            how far we can look backward from the current counter value to
            match the response, default to zero as it is usually a bad idea to
            look backward as the counter is only advanced when a valid value is

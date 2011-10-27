@@ -29,12 +29,35 @@ HOTP = 'HOTP'
 OCRA_1 = 'OCRA-1'
 
 class CryptoFunction(object):
-    '''Represents an OCRA CryptoFunction specification'''
+    '''Represents an OCRA CryptoFunction specification.
+
+       :attribute hash_algo:
+           an object implementing the digest interface as given by PEP 247 and
+           the hashlib package
+       :attribute truncation_length:
+           the length to truncate the decimal representation, can be None, in
+           this case no truncation is done.
+    '''
     def __init__(self, hash_algo, truncation_length):
+        assert hash_algo
+        assert is_int(truncation_length) or truncation_length is None
         self.hash_algo = hash_algo
         self.truncation_length = truncation_length
 
     def __call__(self, key, data_input):
+        '''Compute an HOTP digest using the given key and data input and
+           following the current crypto function description.
+
+           :param key:
+               a byte string containing the HMAC key
+
+           :param data_input:
+               the data input assembled as a byte-string as described by the
+               OCRA specification
+           :returns:
+               the computed digest
+           :rtype: str
+        '''
         h = hmac.new(key, data_input, self.hash_algo).digest()
         if self.truncation_length:
             return hotp.dec(h, self.truncation_length)
@@ -42,9 +65,19 @@ class CryptoFunction(object):
             return str(hotp.truncated_value(h))
 
     def __str__(self):
+        '''Return the standard representation for the given crypto function.
+        '''
         return 'HOTP-%s-%s' % (self.hash_algo.__name__, self.truncation_length)
 
 def str2hashalgo(description):
+    '''Convert the name of a hash algorithm as described in the OATH
+       specifications, to a python object handling the digest algorithm
+       interface, PEP-xxx.
+
+       :param description
+           the name of the hash algorithm, example
+       :rtype: a hash algorithm class constructor
+    '''
     algo = getattr(hashlib, description.lower(), None)
     if not callable(algo):
         raise ValueError, ('Unknown hash algorithm', s[1])
@@ -54,6 +87,11 @@ def str2cryptofunction(crypto_function_description):
     '''
        Convert an OCRA crypto function description into a CryptoFunction
        instance
+
+       :param crypto_function_description:
+       :returns:
+           the CryptoFunction object
+       :rtype: CryptoFunction
     '''
     s = crypto_function_description.split('-')
     if len(s) != 3:
