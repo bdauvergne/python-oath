@@ -2,4 +2,4 @@ from totp import *
 from hotp import *
 from ocra import *
 
-VERSION = '0.9'
+VERSION = '1.0'

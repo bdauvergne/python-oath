@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from distutils.core import setup, Command
-import oath
 from unittest import TextTestRunner, TestLoader
 from glob import glob
 from os.path import splitext, basename, join as pjoin
@@ -27,11 +26,11 @@ class TestCommand(Command):
                 )
 
         tests = TestLoader().loadTestsFromNames(testfiles)
-        t = TextTestRunner(verbosity = 1)
+        t = TextTestRunner(verbosity = 4)
         t.run(tests)
 
 setup(name='oath',
-        version=oath.VERSION,
+        version='1.0',
         license='MIT',
         description='Python implementation of the three main OATH specifications: HOTP, TOTP and OCRA',
         url='https://github.com/bdauvergne/python-oath',
