@@ -98,7 +98,68 @@ class OCRA(unittest.TestCase):
 
     mut_suite = 'OCRA-1:HOTP-SHA256-8:QA08'
 
-    def test_mutual_challenge_response(self):
+    mut_tests = [{'server_ocrasuite': 'OCRA-1:HOTP-SHA256-8:QA08',
+                  'client_ocrasuite': 'OCRA-1:HOTP-SHA256-8:QA08',
+                  'key': key32,
+                  'challenges': [{ 'params': { 'Q': 'CLI22220SRV11110' },
+                        'server_result': '28247970',
+                        'client_result': '15510767' },
+                      { 'params': { 'Q': 'CLI22221SRV11111' },
+                        'server_result': '01984843',
+                        'client_result': '90175646' },
+                      { 'params': { 'Q': 'CLI22222SRV11112' },
+                        'server_result': '65387857',
+                        'client_result': '33777207' },
+                      { 'params': { 'Q': 'CLI22223SRV11113' },
+                        'server_result': '03351211',
+                        'client_result': '95285278' },
+                      { 'params': { 'Q': 'CLI22224SRV11114' },
+                        'server_result': '83412541',
+                        'client_result': '28934924' },]},
+                 {'server_ocrasuite': 'OCRA-1:HOTP-SHA512-8:QA08',
+                  'client_ocrasuite': 'OCRA-1:HOTP-SHA512-8:QA08-PSHA1',
+                  'key': key64,
+                  'challenges': [{ 'params': { 'Q': 'CLI22220SRV11110' },
+                        'server_result': '79496648',
+                        'client_result': '18806276' },
+                                 { 'params': { 'Q': 'CLI22221SRV11111' },
+                        'server_result': '76831980',
+                        'client_result': '70020315' },
+                                 { 'params': { 'Q': 'CLI22222SRV11112' },
+                        'server_result': '12250499',
+                        'client_result': '01600026' },
+                                 { 'params': { 'Q': 'CLI22223SRV11113' },
+                        'server_result': '90856481',
+                        'client_result': '18951020' },
+                                 { 'params': { 'Q': 'CLI22224SRV11114' },
+                        'server_result': '12761449',
+                        'client_result': '32528969' },
+                      ]},
+                ]
+
+
+    def test_mutual_challenge_response_rfc(self):
+        for test in self.mut_tests:
+            for server_instance in test['challenges']:
+                ocra_client = OCRAMutualChallengeResponseClient(test['key'],
+                        test['client_ocrasuite'], test['server_ocrasuite'])
+                ocra_server = OCRAMutualChallengeResponseServer(test['key'],
+                        test['server_ocrasuite'], test['client_ocrasuite'])
+                Q = server_instance['params']['Q']
+                qc, qs = Q[:8], Q[8:]
+                # ignore computed challenge
+                ocra_client.compute_client_challenge(Qc=qc)
+                rs, qs = ocra_server.compute_server_response(qc, Qs=qs)
+                self.assertEqual(rs, server_instance['server_result'])
+                self.assertTrue(ocra_client.verify_server_response(rs, qs))
+                kwargs = {}
+                if ocra_client.ocrasuite.data_input.P:
+                    kwargs['P'] = self.pin
+                rc = ocra_client.compute_client_response(**kwargs)
+                self.assertEqual(rc, server_instance['client_result'])
+                self.assertTrue(ocra_server.verify_client_response(rc, **kwargs))
+
+    def test_mutual_challenge_response_simple(self):
         ocra_client = OCRAMutualChallengeResponseClient(self.key32,
                 self.mut_suite)
         ocra_server = OCRAMutualChallengeResponseServer(self.key32,
@@ -108,3 +169,5 @@ class OCRA(unittest.TestCase):
         self.assertTrue(ocra_client.verify_server_response(rs, qs))
         rc = ocra_client.compute_client_response()
         self.assertTrue(ocra_server.verify_client_response(rc))
+
+

@@ -280,9 +280,11 @@ DEFAULT_LENGTH = 20
 class OCRAChallengeResponse(object):
     state = 1
 
-    def __init__(self, key, ocrasuite_description):
+    def __init__(self, key, ocrasuite_description, remote_ocrasuite_description=None):
         self.key = key
         self.ocrasuite = str2ocrasuite(ocrasuite_description)
+        self.remote_ocrasuite = remote_ocrasuite_description is not None \
+                and str2ocrasuite(remote_ocrasuite_description)
         if not self.ocrasuite.data_input.Q:
             raise ValueError, ('Ocrasuite must have a Q descriptor',)
 
@@ -308,14 +310,16 @@ class OCRAChallengeResponseServer(OCRAChallengeResponse):
     def compute_challenge(self):
         if self.state != self.SERVER_STATE_COMPUTE_CHALLENGE:
             raise StateException()
-        self.challenge = compute_challenge(self.ocrasuite.data_input.Q)
+        ocrasuite = self.remote_ocrasuite or self.ocrasuite
+        self.challenge = compute_challenge(ocrasuite.data_input.Q)
         self.state = self.SERVER_STATE_VERIFY_RESPONSE
         return self.challenge
 
     def verify_response(self, response, **kwargs):
         if self.state != self.SERVER_STATE_VERIFY_RESPONSE:
             return StateException()
-        c = self.ocrasuite(self.key, Q=self.challenge, **kwargs) == response
+        ocrasuite = self.remote_ocrasuite or self.ocrasuite
+        c = ocrasuite(self.key, Q=self.challenge, **kwargs) == response
         if c:
             self.state = self.SERVER_STATE_FINISHED
         return c
@@ -331,10 +335,12 @@ class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
     CLIENT_STATE_COMPUTE_CLIENT_RESPONSE = 3
     CLIENT_STATE_FINISHED = 4
 
-    def compute_client_challenge(self):
+    def compute_client_challenge(self, Qc=None):
         if self.state != self.CLIENT_STATE_COMPUTE_CLIENT_CHALLENGE:
             raise StateException()
-        self.client_challenge = compute_challenge(self.ocrasuite.data_input.Q)
+
+        ocrasuite = self.remote_ocrasuite or self.ocrasuite
+        self.client_challenge = Qc or compute_challenge(ocrasuite.data_input.Q)
         self.state = self.CLIENT_STATE_VERIFY_SERVER_RESPONSE
         return self.client_challenge
 
@@ -343,7 +349,8 @@ class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
             return StateException()
         self.server_challenge = challenge
         q = self.client_challenge+self.server_challenge
-        c = self.ocrasuite(self.key, Qsc=q, **kwargs) == response
+        ocrasuite = self.remote_ocrasuite or self.ocrasuite
+        c = ocrasuite(self.key, Qsc=q, **kwargs) == response
         if c:
             self.state = self.CLIENT_STATE_COMPUTE_CLIENT_RESPONSE
         return c
@@ -361,11 +368,11 @@ class OCRAMutualChallengeResponseServer(OCRAChallengeResponse):
     SERVER_STATE_VERIFY_CLIENT_RESPONSE = 2
     SERVER_STATE_FINISHED = 3
 
-    def compute_server_response(self, challenge, **kwargs):
+    def compute_server_response(self, challenge, Qs=None, **kwargs):
         if self.state != self.SERVER_STATE_COMPUTE_SERVER_RESPONSE:
             raise StateException()
         self.client_challenge = challenge
-        self.server_challenge = compute_challenge(self.ocrasuite.data_input.Q)
+        self.server_challenge = Qs or compute_challenge(self.ocrasuite.data_input.Q)
         q = self.client_challenge+self.server_challenge
         # no need for pin with server mode
         kwargs.pop('P', None)
@@ -378,7 +385,8 @@ class OCRAMutualChallengeResponseServer(OCRAChallengeResponse):
         if self.state != self.SERVER_STATE_VERIFY_CLIENT_RESPONSE:
             raise StateException()
         q = self.server_challenge+self.client_challenge
-        c = self.ocrasuite(self.key, Qsc=q, **kwargs) == response
+        ocrasuite = self.remote_ocrasuite or self.ocrasuite
+        c = ocrasuite(self.key, Qsc=q, **kwargs) == response
         if c:
             self.state = self.SERVER_STATE_FINISHED
         return c
