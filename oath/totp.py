@@ -58,7 +58,7 @@ def totp(key, format='dec6', period=30, t=None, hash=hashlib.sha1):
     T = int(t/period)
     return hotp(key, T, format=format, hash=hash)
 
-def accept_totp( response, key, format='dec6', period=30, t=None,
+def accept_totp(key, response, format='dec6', period=30, t=None,
         hash=hashlib.sha1, forward_drift=1, backward_drift=1, drift=0):
     '''
        Validate a TOTP value inside a window of 

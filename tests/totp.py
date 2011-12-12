@@ -66,5 +66,5 @@ class Totp(unittest.TestCase):
     def test_totp(self):
         for t, _, _, response, algo_key in self.tv:
             algo = self.hash_algos[algo_key]
-            self.assertTrue(accept_totp(algo['key'], response, t=int(t),
+            self.assertTrue(accept_totp(response, algo['key'], t=int(t),
                 hash=algo['alg']))
