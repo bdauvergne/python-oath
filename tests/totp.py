@@ -10,7 +10,7 @@ def parse_tv(tv):
 
 class Totp(unittest.TestCase):
     key_sha1 = binascii.hexlify('1234567890'*2)
-    key_sha256 = binascii.hexlify('1234567890'*2+'12')
+    key_sha256 = binascii.hexlify('1234567890'*3+'12')
     key_sha512 = binascii.hexlify('1234567890'*6+'1234')
 
     tv = parse_tv('''|      59     |  1970-01-01  | 0000000000000001 | 94287082 |  SHA1  |
@@ -66,5 +66,5 @@ class Totp(unittest.TestCase):
     def test_totp(self):
         for t, _, _, response, algo_key in self.tv:
             algo = self.hash_algos[algo_key]
-            self.assertTrue(accept_totp(response, algo['key'], t=int(t),
-                hash=algo['alg']))
+            self.assertTrue(accept_totp(algo['key'], response, t=int(t),
+                hash=algo['alg'], format='dec8'))
