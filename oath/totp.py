@@ -120,6 +120,8 @@ def accept_totp(key, response, format='dec6', period=30, t=None,
            reliable source of time like an NTP server.
        :rtype: a two element tuple
     '''
+    if t is None:
+        t = int(time.time())
     for i in range(max(-divmod(t, period)[0],-backward_drift),forward_drift+1):
         d = (drift+i) * period
         if totp(key, format=format, period=period, hash=hash, t=t+d) == str(response):
