@@ -49,7 +49,7 @@ def totp(key, format='dec6', period=30, t=None, hash=hashlib.sha1):
        :type: str
     '''
     if t is None:
-        t = time.time()
+        t = int(time.time())
     else:
         if isinstance(t, datetime.datetime):
             t = calendar.timegm(t.utctimetuple())
