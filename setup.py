@@ -30,7 +30,7 @@ class TestCommand(Command):
         t.run(tests)
 
 setup(name='oath',
-        version='1.0',
+        version='1.1',
         license='MIT',
         description='Python implementation of the three main OATH specifications: HOTP, TOTP and OCRA',
         url='https://github.com/bdauvergne/python-oath',
