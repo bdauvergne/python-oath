@@ -12,7 +12,7 @@ import string
     See also http://tools.ietf.org/html/draft-mraihi-mutual-oath-hotp-variants-14
 '''
 
-__ALL__ = ('str2ocrasuite', 'StateException', 'OCRAChallengeResponseServer',
+__all__ = ('str2ocrasuite', 'StateException', 'OCRAChallengeResponseServer',
     'OCRAChallengeResponseClient', 'OCRAMutualChallengeResponseServer',
     'OCRAMutualChallengeResponseClient')
 

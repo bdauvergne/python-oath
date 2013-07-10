@@ -17,7 +17,7 @@ import calendar
 
 from hotp import hotp
 
-__ALL__ = ('totp', 'accept_totp')
+__all__ = ('totp', 'accept_totp')
 
 def totp(key, format='dec6', period=30, t=None, hash=hashlib.sha1):
     '''

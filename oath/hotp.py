@@ -16,7 +16,7 @@ client side.
 See also http://tools.ietf.org/html/rfc4226
 '''
 
-__ALL__ = ( 'hotp', 'accept_hotp' )
+__all__ = ( 'hotp', 'accept_hotp' )
 
 def truncated_value(h):
     bytes = map(ord, h)

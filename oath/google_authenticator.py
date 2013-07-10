@@ -17,7 +17,7 @@ import hashlib
 from . import hotp
 from . import totp
 
-__ALL__ = ('GoogleAuthenticator',)
+__all__ = ('GoogleAuthenticator',)
 
 otpauth_re = re.compile(r'^otpauth://(?P<type>\w+)'
                         r'/(?P<labe>[^?]+)'
