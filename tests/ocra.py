@@ -1,7 +1,6 @@
 import unittest
-import binascii
-
-from oath.ocra import *
+from oath import (str2ocrasuite, OCRAMutualChallengeResponseClient,
+        OCRAMutualChallengeResponseServer)
 
 
 class OCRA(unittest.TestCase):

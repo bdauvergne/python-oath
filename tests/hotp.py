@@ -1,6 +1,6 @@
 import unittest
 
-from oath.hotp import *
+from oath import hotp, accept_hotp
 
 class Hotp(unittest.TestCase):
     secret = '3132333435363738393031323334353637383930'

@@ -1,9 +1,10 @@
 import hmac
 import hashlib
 import re
-import hotp
 import random
 import string
+
+from . import _hotp as hotp
 
 '''
     Implementation of OCRA

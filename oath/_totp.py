@@ -15,7 +15,7 @@ import calendar
 '''
 
 
-from hotp import hotp
+from ._hotp import hotp
 
 __all__ = ('totp', 'accept_totp')
 
