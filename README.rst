@@ -1,6 +1,12 @@
 Python OATH
 ===========
 
+.. image:: https://travis-ci.org/bdauvergne/python-oath.png?branch=master
+        :target: https://travis-ci.org/bdauvergne/python-oath
+
+.. images:: https://pypip.in/d/oath/badge.png
+        :target: https://crate.io/packages/oath/
+
 python-oath is a package implementing the three main OATH specifications:
  - HOTP, an event based one-time password standard -- OTP -- using HMAC signatures,
  - TOTP, a time based OTP,
