@@ -1,7 +1,8 @@
 import unittest
 import binascii
+import hashlib
 
-from oath.totp import *
+from oath.totp import accept_totp
 
 def parse_tv(tv):
     test_vectors  = [ [ cell.strip() for cell in line.strip(' |').split('|') ] for line in tv.splitlines()]
