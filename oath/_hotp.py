@@ -26,8 +26,10 @@ def truncated_value(h):
     return v
 
 def dec(h,p):
-    v = str(truncated_value(h))
-    return v[len(v)-p:]
+    v = truncated_value(h)
+    v = v % (10**p)
+    return '%0*d' % (p, v)
+
 
 def int2beint64(i):
     hex_counter = hex(long(i))[2:-1]

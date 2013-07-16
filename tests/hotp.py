@@ -43,3 +43,8 @@ class Hotp(unittest.TestCase):
             self.assertEqual(h,  hexa)
             self.assertEqual(d6, trunc)
             self.assertTrue(accept_hotp(self.secret, trunc, counter))
+
+    def test_dec8_regression_20130716(self):
+        h = hotp("fb9cda921c82d893d9cdc6d6559997b1","132974666","dec8")
+        assert len(h) == 8, 'wrong length %s' % h
+        assert h == '03562487'
