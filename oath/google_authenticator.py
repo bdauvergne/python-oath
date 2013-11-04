@@ -14,8 +14,8 @@ import urlparse
 import base64
 import hashlib
 
-from . import hotp
-from . import totp
+import .hotp as hotp
+import .totp as totp
 
 __all__ = ('GoogleAuthenticator',)
 
@@ -61,8 +61,8 @@ def parse_otpauth(otpauth_uri):
                 d[ALGORITHM], otpauth_uri)
     for key in (DIGITS, PERIOD, COUNTER):
         try:
-            if k in query_parse:
-                d[k] = int(query_parse[k])
+            if key in query_parse:
+                d[key] = int(query_parse[key])
         except ValueError:
             raise ValueError('Invalid value for field %s in otpauth URI, must '
                     'be a number' % key, otpauth_uri)
@@ -82,7 +82,7 @@ def parse_otpauth(otpauth_uri):
     return d
 
 class GoogleAuthenticator(object):
-    def __init__(otpauth_uri, state=None):
+    def __init__(self, otpauth_uri, state=None):
         self.otpauth_uri = otpauth_uri
         self.parsed_otpauth_uri = parse_otpauth(otpauth_uri)
         self.generator_state = state or {}
@@ -132,4 +132,4 @@ class GoogleAuthenticator(object):
                     t=t)
             return ok
         else:
-            raise NotImplemented(self.parsed_otpauth_uri[TYPE])
+            raise NotImplementedError(self.parsed_otpauth_uri[TYPE])

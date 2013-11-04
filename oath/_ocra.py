@@ -81,7 +81,7 @@ def str2hashalgo(description):
     '''
     algo = getattr(hashlib, description.lower(), None)
     if not callable(algo):
-        raise ValueError, ('Unknown hash algorithm', s[1])
+        raise ValueError, ('Unknown hash algorithm', description)
     return algo
 
 def str2cryptofunction(crypto_function_description):
@@ -108,7 +108,7 @@ def str2cryptofunction(crypto_function_description):
         raise ValueError, ('Invalid truncation length', s[2])
     return CryptoFunction(algo, truncation_length)
 
-class DataInput:
+class DataInput(object):
     '''
        OCRA data input description
 
@@ -117,7 +117,7 @@ class DataInput:
        to give to the HMAC algorithme implemented by a CryptoFunction object
     '''
 
-    __slots__ = [ 'ocrasuite', 'C', 'Q', 'P', 'S', 'T' ]
+    __slots__ = [ 'C', 'Q', 'P', 'S', 'T' ]
 
     def __init__(self, C=None, Q=None, P=None, S=None, T=None):
         self.C = C
@@ -190,7 +190,14 @@ class DataInput:
         return datainput
 
     def __str__(self):
-        return self.ocrasuite
+        values = []
+        for slot in DataInput.__slots__:
+            value = getattr(self, slot, None)
+            if value is not None:
+                values.append('{0}={1}'.format(slot, value))
+        return '<{0} {1}>'.format(DataInput.__class__.__name__, ', '.join(values))
+
+
 
 def str2datainput(datainput_description):
     elements = datainput_description.split('-')
@@ -328,7 +335,7 @@ class OCRAChallengeResponseServer(OCRAChallengeResponse):
 
 class OCRAChallengeResponseClient(OCRAChallengeResponse):
     def compute_response(self, challenge, **kwargs):
-        return self.ocrasuite(self.key, Q=self.challenge, **kwargs)
+        return self.ocrasuite(self.key, Q=challenge, **kwargs)
 
 class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
     CLIENT_STATE_COMPUTE_CLIENT_CHALLENGE = 1
