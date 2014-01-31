@@ -88,7 +88,7 @@ class GoogleAuthenticator(object):
         self.generator_state = state or {}
         self.acceptor_state = state or {}
 
-    def generate(self):
+    def generate(self, t=None):
         format = 'dec%s' % self.parsed_otpauth_uri[DIGITS]
         hash = self.parsed_otpauth_uri[ALGORITHM]
         secret = self.parsed_otpauth_uri[SECRET]
@@ -101,8 +101,7 @@ class GoogleAuthenticator(object):
             return otp
         elif self.parsed_otpauth_uri[TYPE] == TOTP:
             period = self.parsed_otpauth_uri[PERIOD]
-            return hotp.totp(self.secret, format=format, period=period,
-                    hash=hash)
+            return totp.totp(secret, format=format, period=period, hash=hash, t=t)
         else:
             raise NotImplemented(self.parsed_otpauth_uri[TYPE])
 
