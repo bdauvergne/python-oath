@@ -13,11 +13,12 @@ import re
 import urlparse
 import base64
 import hashlib
+import urllib
 
 from . import _hotp as hotp
 from . import _totp as totp
 
-__all__ = ('GoogleAuthenticator',)
+__all__ = ('GoogleAuthenticator', 'from_b32key')
 
 otpauth_re = re.compile(r'^otpauth://(?P<type>\w+)'
                         r'/(?P<labe>[^?]+)'
@@ -80,6 +81,21 @@ def parse_otpauth(otpauth_uri):
     if d[TYPE] == TOTP and PERIOD not in d:
         d[PERIOD] = 30
     return d
+
+
+def from_b32key(b32_key, state=None):
+    '''Some phone app directly accept a partial b32 encoding, we try to emulate that'''
+    if len(b32_key) % 8 not in (0, 2, 4, 5, 7):
+        raise ValueError('invalid base32 value')
+    b32_key += '=' * (8 - len(b32_key) % 8)
+    b32_key = b32_key.upper()
+    try:
+        base64.b32decode(b32_key)
+    except TypeError:
+        raise ValueError('invalid base32 value')
+    return GoogleAuthenticator('otpauth://totp/xxx?%s' %
+            urllib.urlencode({'secret': b32_key}))
+
 
 class GoogleAuthenticator(object):
     def __init__(self, otpauth_uri, state=None):
