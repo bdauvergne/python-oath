@@ -96,8 +96,7 @@ class GoogleAuthenticator(object):
         if self.parsed_otpauth_uri[TYPE] == HOTP:
             if COUNTER not in state:
                 state[COUNTER] = self.parsed_otpauth_uri[COUNTER]
-            otp = hotp.hotp(secret, state[COUNTER], format=format,
-                    hash=hash)
+            otp = hotp.hotp(secret, state[COUNTER], format=format, hash=hash)
             state[COUNTER] += 1
             return otp
         elif self.parsed_otpauth_uri[TYPE] == TOTP:
@@ -117,9 +116,8 @@ class GoogleAuthenticator(object):
         if self.parsed_otpauth_uri[TYPE] == HOTP:
             if COUNTER not in state:
                 state[COUNTER] = self.parsed_otpauth_uri[COUNTER]
-            ok, state[COUNTER] = hotp.accept_hotp(otp, secret,
-                    state[COUNTER], format=format, hash=hash,
-                    drift=hotp_drift,
+            ok, state[COUNTER] = hotp.accept_hotp(otp, secret, state[COUNTER],
+                    format=format, hash=hash, drift=hotp_drift,
                     backward_drift=hotp_backward_drift)
             return ok
         elif self.parsed_otpauth_uri[TYPE] == TOTP:
