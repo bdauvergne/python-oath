@@ -14,8 +14,8 @@ import urlparse
 import base64
 import hashlib
 
-import .hotp as hotp
-import .totp as totp
+from . import _hotp as hotp
+from . import _totp as totp
 
 __all__ = ('GoogleAuthenticator',)
 
