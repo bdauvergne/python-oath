@@ -43,7 +43,7 @@ def parse_otpauth(otpauth_uri):
     if SECRET not in query_parse:
         raise ValueError('Missing secret field in otpauth URI', otpauth_uri)
     try:
-        d[SECRET] = base64.b32decode(query_parse[SECRET])
+        d[SECRET] = base64.b32decode(query_parse[SECRET][0]).encode('hex')
     except TypeError:
         raise ValueError('Invalid base32 encoding of the secret field in '
                 'otpauth URI', otpauth_uri)
