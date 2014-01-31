@@ -21,3 +21,5 @@ The main APIs are:
  - hotp, to generate a password.
  - accept_hotp, to check a received password,
  - totp and accept_totp, the same for the TOTP standard.
+ - GoogleAuthenticator to parse Google Authenticator URI
+ - from_b32key to create a a GoogleAuthenticator object from a simple base32 key
