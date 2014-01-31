@@ -119,7 +119,7 @@ class GoogleAuthenticator(object):
             period = self.parsed_otpauth_uri[PERIOD]
             return totp.totp(secret, format=format, period=period, hash=hash, t=t)
         else:
-            raise NotImplemented(self.parsed_otpauth_uri[TYPE])
+            raise NotImplementedError(self.parsed_otpauth_uri[TYPE])
 
     def accept(self, otp, hotp_drift=3, forward_drift=None,
             hotp_backward_drift=0, totp_forward_drift=1,
