@@ -121,9 +121,8 @@ class GoogleAuthenticator(object):
         else:
             raise NotImplementedError(self.parsed_otpauth_uri[TYPE])
 
-    def accept(self, otp, hotp_drift=3, forward_drift=None,
-            hotp_backward_drift=0, totp_forward_drift=1,
-            totp_backward_drift=1, t=None):
+    def accept(self, otp, hotp_drift=3, hotp_backward_drift=0,
+            totp_forward_drift=1, totp_backward_drift=1, t=None):
         format = 'dec%s' % self.parsed_otpauth_uri[DIGITS]
         hash = self.parsed_otpauth_uri[ALGORITHM]
         secret = self.parsed_otpauth_uri[SECRET]
