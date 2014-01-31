@@ -101,7 +101,7 @@ class GoogleAuthenticator(object):
             state[COUNTER] += 1
             return otp
         elif self.parsed_otpauth_uri[TYPE] == TOTP:
-            period = 'dec%s' % self.parsed_otpauth_uri[PERIOD]
+            period = self.parsed_otpauth_uri[PERIOD]
             return hotp.totp(self.secret, format=format, period=period,
                     hash=hash)
         else:
