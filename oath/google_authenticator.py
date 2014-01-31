@@ -94,7 +94,7 @@ def from_b32key(b32_key, state=None):
     except TypeError:
         raise ValueError('invalid base32 value')
     return GoogleAuthenticator('otpauth://totp/xxx?%s' %
-            urllib.urlencode({'secret': b32_key}))
+            urllib.urlencode({'secret': b32_key}), state=state)
 
 
 class GoogleAuthenticator(object):
