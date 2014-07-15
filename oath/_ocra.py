@@ -4,7 +4,7 @@ import re
 import random
 import string
 
-from . import _hotp as hotp
+from . import _hotp as hotp, _utils
 
 '''
     Implementation of OCRA
@@ -264,7 +264,7 @@ class OcraSuite(object):
         return self.crypto_function(key, data_input)
 
     def accept(self, response, key, **kwargs):
-        return str(response) == self(key, **kwargs)
+        return _utils.compare_digest(str(response), self(key, **kwargs))
 
     def __str__(self):
         return '<OcraSuite crypto_function:%s data_input:%s>' % (self.crypto_function,
@@ -327,7 +327,7 @@ class OCRAChallengeResponseServer(OCRAChallengeResponse):
         if self.state != self.SERVER_STATE_VERIFY_RESPONSE:
             return StateException()
         ocrasuite = self.remote_ocrasuite or self.ocrasuite
-        c = ocrasuite(self.key, Q=self.challenge, **kwargs) == response
+        c = _utils.compare_digest(ocrasuite(self.key, Q=self.challenge, **kwargs), response)
         if c:
             self.state = self.SERVER_STATE_FINISHED
         return c
@@ -358,7 +358,7 @@ class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
         self.server_challenge = challenge
         q = self.client_challenge+self.server_challenge
         ocrasuite = self.remote_ocrasuite or self.ocrasuite
-        c = ocrasuite(self.key, Qsc=q, **kwargs) == response
+        c = _utils.compare_digest(ocrasuite(self.key, Qsc=q, **kwargs), response)
         if c:
             self.state = self.CLIENT_STATE_COMPUTE_CLIENT_RESPONSE
         return c
@@ -394,7 +394,7 @@ class OCRAMutualChallengeResponseServer(OCRAChallengeResponse):
             raise StateException()
         q = self.server_challenge+self.client_challenge
         ocrasuite = self.remote_ocrasuite or self.ocrasuite
-        c = ocrasuite(self.key, Qsc=q, **kwargs) == response
+        c = _utils.compare_digest(ocrasuite(self.key, Qsc=q, **kwargs), response)
         if c:
             self.state = self.SERVER_STATE_FINISHED
         return c

@@ -2,6 +2,8 @@ import hashlib
 import hmac
 import binascii
 
+from . import _utils
+
 '''
 HOTP implementation
 
@@ -155,6 +157,6 @@ def accept_hotp(key, response, counter, format='dec6', hash=hashlib.sha1,
     '''
 
     for i in range(-backward_drift, drift+1):
-        if hotp(key, counter+i, format=format, hash=hash) == str(response):
+        if _utils.compare_digest(hotp(key, counter+i, format=format, hash=hash), str(response)):
             return True, counter+i+1
     return False,counter
