@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import binascii
+import struct
 
 from . import _utils
 
@@ -21,23 +22,17 @@ See also http://tools.ietf.org/html/rfc4226
 __all__ = ( 'hotp', 'accept_hotp' )
 
 def truncated_value(h):
-    bytes = map(ord, h)
-    offset = bytes[-1] & 0xf
-    v = (bytes[offset] & 0x7f) << 24 | (bytes[offset+1] & 0xff) << 16 | \
-            (bytes[offset+2] & 0xff) << 8 | (bytes[offset+3] & 0xff)
-    return v
+    offset = ord(h[19]) & 0xF
+    (value,) = struct.unpack('>I', h[offset:offset + 4])
+    return value & 0x7FFFFFFF
 
 def dec(h,p):
-    v = truncated_value(h)
-    v = v % (10**p)
-    return '%0*d' % (p, v)
+    digits = str(truncated_value(h))
+    return digits[-p:].zfill(p)
 
 
 def int2beint64(i):
-    hex_counter = hex(long(i))[2:-1]
-    hex_counter = '0' * (16 - len(hex_counter)) + hex_counter
-    bin_counter = binascii.unhexlify(hex_counter)
-    return bin_counter
+    return struct.pack('>Q', int(i))
 
 def __hotp(key, counter, hash=hashlib.sha1):
     bin_counter = int2beint64(counter)
