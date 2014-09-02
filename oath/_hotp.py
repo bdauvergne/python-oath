@@ -30,7 +30,6 @@ def dec(h,p):
     digits = str(truncated_value(h))
     return digits[-p:].zfill(p)
 
-
 def int2beint64(i):
     return struct.pack('>Q', int(i))
 
