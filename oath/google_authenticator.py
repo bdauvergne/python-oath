@@ -30,6 +30,13 @@ TOTP    =    'totp'
 HOTP    =    'hotp'
 DRIFT    =   'drift'
 
+
+def lenient_b32decode(data):
+    data = data.upper()  # Ensure correct case
+    data += ('=' * ((8 - len(data)) % 8))  # Ensure correct padding
+    return base64.b32decode(data)
+
+
 def parse_otpauth(otpauth_uri):
     parsed_uri = urlparse.urlparse(otpauth_uri)
     if parsed_uri.scheme != 'otpauth':
@@ -41,7 +48,7 @@ def parse_otpauth(otpauth_uri):
     if SECRET not in params:
         raise ValueError('Missing secret field in otpauth URI', otpauth_uri)
     try:
-        params[SECRET] = base64.b32decode(params[SECRET]).encode('hex')
+        params[SECRET] = lenient_b32decode(params[SECRET]).encode('hex')
     except TypeError:
         raise ValueError('Invalid base32 encoding of the secret field in '
                 'otpauth URI', otpauth_uri)
@@ -83,12 +90,8 @@ def parse_otpauth(otpauth_uri):
 
 def from_b32key(b32_key, state=None):
     '''Some phone app directly accept a partial b32 encoding, we try to emulate that'''
-    if len(b32_key) % 8 not in (0, 2, 4, 5, 7):
-        raise ValueError('invalid base32 value')
-    b32_key += '=' * (8 - len(b32_key) % 8)
-    b32_key = b32_key.upper()
     try:
-        base64.b32decode(b32_key)
+        lenient_b32decode(b32_key)
     except TypeError:
         raise ValueError('invalid base32 value')
     return GoogleAuthenticator('otpauth://totp/xxx?%s' %
