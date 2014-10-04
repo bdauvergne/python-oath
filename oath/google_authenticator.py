@@ -9,7 +9,6 @@ This module provides parsing and high-level API over the classic HOTP and TOTP
 APIs provided by the oath.hotp and oath.totp modules.
 '''
 
-import re
 import urlparse
 import base64
 import hashlib
@@ -19,10 +18,6 @@ from . import _hotp as hotp
 from . import _totp as totp
 
 __all__ = ('GoogleAuthenticator', 'from_b32key')
-
-otpauth_re = re.compile(r'^otpauth://(?P<type>\w+)'
-                        r'/(?P<labe>[^?]+)'
-                        r'\?(?P<query>.*)$')
 
 LABEL   =   'label'
 TYPE    =    'type'
@@ -36,51 +31,54 @@ HOTP    =    'hotp'
 DRIFT    =   'drift'
 
 def parse_otpauth(otpauth_uri):
-    m = re.match(otpauth_re, otpauth_uri)
-    if not m:
+    parsed_uri = urlparse.urlparse(otpauth_uri)
+    if parsed_uri.scheme != 'otpauth':
         raise ValueError('Invalid otpauth URI', otpauth_uri)
-    d = m.groupdict()
-    query_parse = urlparse.parse_qs(d['query'])
-    if SECRET not in query_parse:
+
+    params = dict(((k, v[0]) for k, v in urlparse.parse_qs(parsed_uri.query).items()))
+    params[TYPE] = parsed_uri.hostname
+
+    if SECRET not in params:
         raise ValueError('Missing secret field in otpauth URI', otpauth_uri)
     try:
-        d[SECRET] = base64.b32decode(query_parse[SECRET][0]).encode('hex')
+        params[SECRET] = base64.b32decode(params[SECRET]).encode('hex')
     except TypeError:
         raise ValueError('Invalid base32 encoding of the secret field in '
                 'otpauth URI', otpauth_uri)
-    if ALGORITHM in query_parse:
-        d[ALGORITHM] = query_parse[ALGORITHM].lower()
-        if d[ALGORITHM] not in ('sha1', 'sha256', 'sha512', 'md5'):
+    if ALGORITHM in params:
+        params[ALGORITHM] = params[ALGORITHM].lower()
+        if params[ALGORITHM] not in ('sha1', 'sha256', 'sha512', 'md5'):
             raise ValueError('Invalid value for algorithm field in otpauth '
                     'URI', otpauth_uri)
     else:
-        d[ALGORITHM] = 'sha1'
+        params[ALGORITHM] = 'sha1'
     try:
-        d[ALGORITHM] = getattr(hashlib, d[ALGORITHM])
+        params[ALGORITHM] = getattr(hashlib, params[ALGORITHM])
     except AttributeError:
         raise ValueError('Unsupported algorithm %s in othauth URI' %
-                d[ALGORITHM], otpauth_uri)
+                params[ALGORITHM], otpauth_uri)
+
     for key in (DIGITS, PERIOD, COUNTER):
         try:
-            if key in query_parse:
-                d[key] = int(query_parse[key])
+            if key in params:
+                params[key] = int(params[key])
         except ValueError:
             raise ValueError('Invalid value for field %s in otpauth URI, must '
                     'be a number' % key, otpauth_uri)
-    if COUNTER not in d:
-        d[COUNTER] = 0 # what else ?
-    if DIGITS in d:
-        if d[DIGITS] not in (6,8):
+    if COUNTER not in params:
+        params[COUNTER] = 0 # what else ?
+    if DIGITS in params:
+        if params[DIGITS] not in (6,8):
             raise ValueError('Invalid value for field digits in othauth URI, it '
                     'must 6 or 8', otpauth_uri)
     else:
-        d[DIGITS] = 6
-    if d[TYPE] == HOTP and COUNTER not in d:
+        params[DIGITS] = 6
+    if params[TYPE] == HOTP and COUNTER not in params:
         raise ValueError('Missing field counter in otpauth URI, it is '
                 'mandatory with the hotp type', otpauth_uri)
-    if d[TYPE] == TOTP and PERIOD not in d:
-        d[PERIOD] = 30
-    return d
+    if params[TYPE] == TOTP and PERIOD not in params:
+        params[PERIOD] = 30
+    return params
 
 
 def from_b32key(b32_key, state=None):
