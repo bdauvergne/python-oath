@@ -14,7 +14,7 @@ To compute an HOTP one-time-password:
 
 where is the hotp is a key given as an hexadecimal string and counter is an
 integer. The counter value must be kept synchronized on the server and the
-client side. 
+client side.
 
 See also http://tools.ietf.org/html/rfc4226
 '''
@@ -43,7 +43,7 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
     '''
        Compute a HOTP value as prescribed by RFC4226
 
-       :param key: 
+       :param key:
            the HOTP secret key given as an hexadecimal string
        :param counter:
            the OTP generation counter
@@ -79,7 +79,7 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
     elif format == 'dec8':
         return dec(bin_hotp, 8)
     elif format == 'hex':
-        return hex(truncated_value(bin_hotp))[2:]
+        return '%x' % truncated_value(bin_hotp)
     elif format == 'hex-notrunc':
         return binascii.hexlify(bin_hotp)
     elif format == 'bin':
