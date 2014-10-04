@@ -155,7 +155,7 @@ class DataInput(object):
                 except ValueError:
                     raise ValueError, 'challenge'
             if self.Q[0] == 'N':
-                Q = hex(int(Q))[2:]
+                Q = '%x' % int(Q)
                 Q += '0' * (len(Q) % 2)
                 Q = Q.decode('hex')
             if self.Q[0] == 'A':
