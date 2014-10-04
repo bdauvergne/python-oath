@@ -43,6 +43,7 @@ def parse_otpauth(otpauth_uri):
         raise ValueError('Invalid otpauth URI', otpauth_uri)
 
     params = dict(((k, v[0]) for k, v in urlparse.parse_qs(parsed_uri.query).items()))
+    params[LABEL] = parsed_uri.path[1:]
     params[TYPE] = parsed_uri.hostname
 
     if SECRET not in params:
@@ -104,6 +105,10 @@ class GoogleAuthenticator(object):
         self.parsed_otpauth_uri = parse_otpauth(otpauth_uri)
         self.generator_state = state or {}
         self.acceptor_state = state or {}
+
+    @property
+    def label(self):
+        return self.parsed_otpauth_uri[LABEL]
 
     def generate(self, t=None):
         format = 'dec%s' % self.parsed_otpauth_uri[DIGITS]
