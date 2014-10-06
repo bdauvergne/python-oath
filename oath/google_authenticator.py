@@ -38,9 +38,11 @@ def lenient_b32decode(data):
 
 
 def parse_otpauth(otpauth_uri):
-    parsed_uri = urlparse.urlparse(otpauth_uri)
-    if parsed_uri.scheme != 'otpauth':
+    if not otpauth_uri.startswith('otpauth://'):
         raise ValueError('Invalid otpauth URI', otpauth_uri)
+
+    # urlparse in python 2.6 can't handle the otpauth:// scheme, skip it
+    parsed_uri = urlparse.urlparse(otpauth_uri[8:])
 
     params = dict(((k, v[0]) for k, v in urlparse.parse_qs(parsed_uri.query).items()))
     params[LABEL] = parsed_uri.path[1:]
