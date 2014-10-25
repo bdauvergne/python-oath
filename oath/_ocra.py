@@ -5,6 +5,7 @@ import random
 import string
 
 from . import _hotp as hotp, _utils
+import collections
 
 '''
     Implementation of OCRA
@@ -80,8 +81,8 @@ def str2hashalgo(description):
        :rtype: a hash algorithm class constructor
     '''
     algo = getattr(hashlib, description.lower(), None)
-    if not callable(algo):
-        raise ValueError, ('Unknown hash algorithm', description)
+    if not isinstance(algo, collections.Callable):
+        raise ValueError('Unknown hash algorithm', description)
     return algo
 
 def str2cryptofunction(crypto_function_description):
@@ -96,16 +97,16 @@ def str2cryptofunction(crypto_function_description):
     '''
     s = crypto_function_description.split('-')
     if len(s) != 3:
-        raise ValueError, 'CryptoFunction description must be triplet separated by -'
+        raise ValueError('CryptoFunction description must be triplet separated by -')
     if s[0] != HOTP:
-        raise ValueError, ('Unknown CryptoFunction kind', s[0])
+        raise ValueError('Unknown CryptoFunction kind', s[0])
     algo = str2hashalgo(s[1])
     try:
         truncation_length = int(s[2])
         if truncation_length < 0 or truncation_length > 10:
             raise ValueError
     except ValueError:
-        raise ValueError, ('Invalid truncation length', s[2])
+        raise ValueError('Invalid truncation length', s[2])
     return CryptoFunction(algo, truncation_length)
 
 class DataInput(object):
@@ -135,7 +136,7 @@ class DataInput(object):
                 if C < 0 or C > 2**64:
                     raise Exception()
             except:
-                raise ValueError, ('Invalid counter value', C)
+                raise ValueError('Invalid counter value', C)
             datainput += hotp.int2beint64(int(C))
         if self.Q:
             max_length = self.Q[1]
@@ -144,16 +145,16 @@ class DataInput(object):
                 Q = Qsc
                 max_length *= 2
             if Q is None or not isinstance(Q, str) or len(Q) > max_length:
-                raise ValueError, 'challenge'
+                raise ValueError('challenge')
             if self.Q[0] == 'N' and not Q.isdigit():
-                raise ValueError, 'challenge'
+                raise ValueError('challenge')
             if self.Q[0] == 'A' and not Q.isalnum():
-                raise ValueError, 'challenge'
+                raise ValueError('challenge')
             if self.Q[0] == 'H':
                 try:
                     int(Q, 16)
                 except ValueError:
-                    raise ValueError, 'challenge'
+                    raise ValueError('challenge')
             if self.Q[0] == 'N':
                 Q = '%x' % int(Q)
                 Q += '0' * (len(Q) % 2)
@@ -171,14 +172,14 @@ class DataInput(object):
                 elif len(P) == 2*self.P.digest_size:
                     datainput += P_digest.decode('hex')
                 else:
-                    raise ValueError, ('Pin/Password digest invalid', P_digest)
+                    raise ValueError('Pin/Password digest invalid', P_digest)
             elif P is None:
-                raise ValueError, 'Pin/Password missing'
+                raise ValueError('Pin/Password missing')
             else:
                 datainput += self.P(P).digest()
         if self.S:
             if S is None or len(S) != self.S:
-                raise ValueError, 'session'
+                raise ValueError('session')
             datainput += S
         if self.T:
             if is_int(T_precomputed):
@@ -186,7 +187,7 @@ class DataInput(object):
             elif is_int(T):
                 datainput += hotp.int2beint64(int(T / self.T))
             else:
-                raise ValueError, 'timestamp'
+                raise ValueError('timestamp')
         return datainput
 
     def __str__(self):
@@ -205,7 +206,7 @@ def str2datainput(datainput_description):
     for element in elements:
         letter = element[0]
         if letter in datainputs:
-            raise ValueError, ('DataInput alreadu present %s', element, datainput_description)
+            raise ValueError('DataInput alreadu present %s', element, datainput_description)
         if letter == 'C':
             datainputs['C'] = 1
         elif letter == 'Q':
@@ -220,7 +221,7 @@ def str2datainput(datainput_description):
                     if length < 4 or length > 64:
                         raise ValueError
                 except ValueError:
-                    raise ValueError, ('Invalid challenge descriptor', element)
+                    raise ValueError('Invalid challenge descriptor', element)
                 datainputs['Q'] = (second_letter, length)
         elif letter == 'P':
             algo = str2hashalgo(element[1:] or 'SHA1')
@@ -231,7 +232,7 @@ def str2datainput(datainput_description):
                 try:
                     length = int(element[1:])
                 except ValueError:
-                    raise ValueError, ('Invalid session data descriptor', element)
+                    raise ValueError('Invalid session data descriptor', element)
             datainputs['S'] = length
         elif letter == 'T':
             complement = element[1:] or '1M'
@@ -246,9 +247,9 @@ def str2datainput(datainput_description):
                     length += quantity * PERIODS[period]
                 datainputs['T'] = length
             except ValueError:
-                raise ValueError, ('Invalid timestamp descriptor', element)
+                raise ValueError('Invalid timestamp descriptor', element)
         else:
-            raise ValueError, ('Invalid datainput descriptor', element)
+            raise ValueError('Invalid datainput descriptor', element)
     return DataInput(**datainputs)
 
 
@@ -273,9 +274,9 @@ class OcraSuite(object):
 def str2ocrasuite(ocrasuite_description):
     elements = ocrasuite_description.split(':')
     if len(elements) != 3:
-        raise ValueError, ('Bad OcraSuite description', ocrasuite_description)
+        raise ValueError('Bad OcraSuite description', ocrasuite_description)
     if elements[0] != OCRA_1:
-        raise ValueError, ('Unsupported OCRA identifier', elements[0])
+        raise ValueError('Unsupported OCRA identifier', elements[0])
     crypto_function = str2cryptofunction(elements[1])
     data_input = str2datainput(elements[2])
     return OcraSuite(ocrasuite_description, crypto_function, data_input)
@@ -294,11 +295,11 @@ class OCRAChallengeResponse(object):
         self.remote_ocrasuite = remote_ocrasuite_description is not None \
                 and str2ocrasuite(remote_ocrasuite_description)
         if not self.ocrasuite.data_input.Q:
-            raise ValueError, ('Ocrasuite must have a Q descriptor',)
+            raise ValueError('Ocrasuite must have a Q descriptor',)
 
 def compute_challenge(Q):
     kind, length = Q
-    r = xrange(0, length)
+    r = range(0, length)
     if kind == 'N':
         c = ''.join([random.choice(string.digits) for i in r])
     elif kind == 'A':
@@ -307,7 +308,7 @@ def compute_challenge(Q):
     elif kind == 'H':
         c = ''.join([random.choice(string.hexdigits) for i in r])
     else:
-        raise ValueError, ('Q kind is unknown:', kind)
+        raise ValueError('Q kind is unknown:', kind)
     return c
 
 class OCRAChallengeResponseServer(OCRAChallengeResponse):
