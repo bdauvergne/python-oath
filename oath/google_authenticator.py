@@ -9,10 +9,15 @@ This module provides parsing and high-level API over the classic HOTP and TOTP
 APIs provided by the oath.hotp and oath.totp modules.
 '''
 
-import urlparse
 import base64
 import hashlib
-import urllib
+try:
+    from urllib import parse
+    from urllib.parse import urlencode
+except ImportError:
+    # For python < 3.0
+    import urlparse as parse
+    from urllib import urlencode
 
 from . import _hotp as hotp
 from . import _totp as totp
@@ -42,9 +47,9 @@ def parse_otpauth(otpauth_uri):
         raise ValueError('Invalid otpauth URI', otpauth_uri)
 
     # urlparse in python 2.6 can't handle the otpauth:// scheme, skip it
-    parsed_uri = urlparse.urlparse(otpauth_uri[8:])
+    parsed_uri = parse.urlparse(otpauth_uri[8:])
 
-    params = dict(((k, v[0]) for k, v in urlparse.parse_qs(parsed_uri.query).items()))
+    params = dict(((k, v[0]) for k, v in list(parse.parse_qs(parsed_uri.query).items())))
     params[LABEL] = parsed_uri.path[1:]
     params[TYPE] = parsed_uri.hostname
 
@@ -98,7 +103,7 @@ def from_b32key(b32_key, state=None):
     except TypeError:
         raise ValueError('invalid base32 value')
     return GoogleAuthenticator('otpauth://totp/xxx?%s' %
-            urllib.urlencode({'secret': b32_key}), state=state)
+            urlencode({'secret': b32_key}), state=state)
 
 
 class GoogleAuthenticator(object):
