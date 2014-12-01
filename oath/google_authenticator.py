@@ -14,8 +14,8 @@ import base64
 import hashlib
 import urllib
 
-from . import _hotp as hotp
-from . import _totp as totp
+from oath import _hotp as hotp
+from oath import _totp as totp
 
 __all__ = ('GoogleAuthenticator', 'from_b32key')
 
