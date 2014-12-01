@@ -26,8 +26,8 @@ def is_int(v):
 
 # Constants
 PERIODS = { 'H': 3600, 'M': 60, 'S': 1 }
-HOTP = 'HOTP'
-OCRA_1 = 'OCRA-1'
+HOTP = 'HOTP'.encode('ascii')
+OCRA_1 = 'OCRA-1'.encode('ascii')
 
 class CryptoFunction(object):
     '''Represents an OCRA CryptoFunction specification.
@@ -79,7 +79,7 @@ def str2hashalgo(description):
            the name of the hash algorithm, example
        :rtype: a hash algorithm class constructor
     '''
-    algo = getattr(hashlib, description.lower(), None)
+    algo = getattr(hashlib, description.decode('ascii').lower(), None)
     if not callable(algo):
         raise ValueError('Unknown hash algorithm %s' % description)
     return algo
@@ -94,7 +94,7 @@ def str2cryptofunction(crypto_function_description):
            the CryptoFunction object
        :rtype: CryptoFunction
     '''
-    s = crypto_function_description.split('-')
+    s = crypto_function_description.split('-'.encode('ascii'))
     if len(s) != 3:
         raise ValueError('CryptoFunction description must be triplet separated by -')
     if s[0] != HOTP:
@@ -128,7 +128,7 @@ class DataInput(object):
 
     def __call__(self, C=None, Q=None, P=None, P_digest=None, S=None, T=None,
             T_precomputed=None, Qsc=None):
-        datainput = ''
+        datainput = ''.encode('ascii')
         if self.C:
             try:
                 C = int(C)
@@ -157,19 +157,19 @@ class DataInput(object):
             if self.Q[0] == 'N':
                 Q = '%x' % int(Q)
                 Q += '0' * (len(Q) % 2)
-                Q = Q.decode('hex')
+                Q = _utils.fromhex(Q)
             if self.Q[0] == 'A':
                 pass
             if self.Q[0] == 'H':
-                Q = Q.decode('hex')
+                Q = _utils.fromhex(Q)
             datainput += Q
-            datainput += '\0' * (128-len(Q))
+            datainput += '\0'.encode('ascii') * (128-len(Q))
         if self.P:
             if P_digest:
                 if len(P) == self.P.digest_size:
                     datainput += P_digest
                 elif len(P) == 2*self.P.digest_size:
-                    datainput += P_digest.decode('hex')
+                    datainput += _utils.fromhex(P_digest)
                 else:
                     raise ValueError('Pin/Password digest invalid %s' % P_digest)
             elif P is None:
@@ -200,17 +200,17 @@ class DataInput(object):
 
 
 def str2datainput(datainput_description):
-    elements = datainput_description.split('-')
+    elements = datainput_description.split('-'.encode('ascii'))
     datainputs = {}
     for element in elements:
         letter = element[0]
         if letter in datainputs:
             raise ValueError('DataInput already present %s %s' % (element, datainput_description))
-        if letter == 'C':
-            datainputs['C'] = 1
-        elif letter == 'Q':
+        if letter == 'C'.encode('ascii'):
+            datainputs[letter] = 1
+        elif letter == 'Q'.encode('ascii'):
             if len(element) == 1:
-                datainputs['Q'] = ('N',8)
+                datainputs[letter] = ('N',8)
             else:
                 second_letter = element[1]
                 try:
@@ -221,19 +221,19 @@ def str2datainput(datainput_description):
                         raise ValueError()
                 except ValueError:
                     raise ValueError('Invalid challenge descriptor %s' % element)
-                datainputs['Q'] = (second_letter, length)
-        elif letter == 'P':
+                datainputs[letter] = (second_letter, length)
+        elif letter == 'P'.encode('ascii'):
             algo = str2hashalgo(element[1:] or 'SHA1')
-            datainputs['P'] = algo
-        elif letter == 'S':
+            datainputs[letter] = algo
+        elif letter == 'S'.encode('ascii'):
             length = 64
             if element[1:]:
                 try:
                     length = int(element[1:])
                 except ValueError:
                     raise ValueError('Invalid session data descriptor %s' % element)
-            datainputs['S'] = length
-        elif letter == 'T':
+            datainputs[letter] = length
+        elif letter == 'T'.encode('ascii'):
             complement = element[1:] or '1M'
             try:
                 length = 0
@@ -244,7 +244,7 @@ def str2datainput(datainput_description):
                     period = part[-1]
                     quantity = int(part[:-1])
                     length += quantity * PERIODS[period]
-                datainputs['T'] = length
+                datainputs[letter] = length
             except ValueError:
                 raise ValueError('Invalid timestamp descriptor %s' % element)
         else:
@@ -259,7 +259,7 @@ class OcraSuite(object):
         self.data_input = data_input
 
     def __call__(self, key, **kwargs):
-        data_input = self.ocrasuite_description + '\0' \
+        data_input = self.ocrasuite_description + '\0'.encode('ascii') \
                 + self.data_input(**kwargs)
         return self.crypto_function(key, data_input)
 
@@ -271,7 +271,7 @@ class OcraSuite(object):
                 self.data_input)
 
 def str2ocrasuite(ocrasuite_description):
-    elements = ocrasuite_description.split(':')
+    elements = ocrasuite_description.split(':'.encode('ascii'))
     if len(elements) != 3:
         raise ValueError('Bad OcraSuite description %s' % ocrasuite_description)
     if elements[0] != OCRA_1:
