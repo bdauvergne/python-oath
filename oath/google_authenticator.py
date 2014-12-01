@@ -9,7 +9,10 @@ This module provides parsing and high-level API over the classic HOTP and TOTP
 APIs provided by the oath.hotp and oath.totp modules.
 '''
 
-import urlparse
+try:
+	from urlparse import urlparse, parse_qs
+except ImportError:
+	from urllib.parse import urlparse, parse_qs
 import base64
 import hashlib
 import urllib
@@ -42,9 +45,9 @@ def parse_otpauth(otpauth_uri):
         raise ValueError('Invalid otpauth URI', otpauth_uri)
 
     # urlparse in python 2.6 can't handle the otpauth:// scheme, skip it
-    parsed_uri = urlparse.urlparse(otpauth_uri[8:])
+    parsed_uri = urlparse(otpauth_uri[8:])
 
-    params = dict(((k, v[0]) for k, v in urlparse.parse_qs(parsed_uri.query).items()))
+    params = dict(((k, v[0]) for k, v in parse_qs(parsed_uri.query).items()))
     params[LABEL] = parsed_uri.path[1:]
     params[TYPE] = parsed_uri.hostname
 
