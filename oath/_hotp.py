@@ -22,7 +22,9 @@ See also http://tools.ietf.org/html/rfc4226
 __all__ = ( 'hotp', 'accept_hotp' )
 
 def truncated_value(h):
-    offset = ord(h[-1]) & 0xF
+    v = h[-1]
+    if not isinstance(v, int): v = ord(v) # Python 2.x
+    offset = v & 0xF
     (value,) = struct.unpack('>I', h[offset:offset + 4])
     return value & 0x7FFFFFFF
 
