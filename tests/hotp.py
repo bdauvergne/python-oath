@@ -20,7 +20,7 @@ class Hotp(unittest.TestCase):
 
         for counter, value in tvector:
             h = hotp(self.secret, counter, format='hex-notrunc')
-            self.assertEqual(h, value)
+            self.assertEqual(h, value.encode('ascii'))
 
     def test_accept_hotp(self):
         tvector2 = [
