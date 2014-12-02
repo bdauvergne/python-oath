@@ -9,7 +9,7 @@ class OCRA(unittest.TestCase):
     key32 = fromhex('3132333435363738393031323334353637383930313233343536373839303132')
     key64 = fromhex('31323334353637383930313233343536373839303132333435363738393031323'
                         + '334353637383930313233343536373839303132333435363738393031323334')
-    pin = '1234'.encode('ascii')
+    pin = '1234'
     pin_sha1 = fromhex('7110eda4d09e062aa5e4a390b0a572ac0d2c0220')
 
     tests = [ { 'ocrasuite': 'OCRA-1:HOTP-SHA1-6:QN08',
@@ -86,7 +86,7 @@ class OCRA(unittest.TestCase):
 
     def test_str2ocrasuite(self):
         for test in self.tests:
-            ocrasuite = str2ocrasuite(test['ocrasuite'].encode('ascii'))
+            ocrasuite = str2ocrasuite(test['ocrasuite'])
             key = test['key']
             for vector in test['vectors']:
                 params = vector['params']
@@ -141,9 +141,9 @@ class OCRA(unittest.TestCase):
         for test in self.mut_tests:
             for server_instance in test['challenges']:
                 ocra_client = OCRAMutualChallengeResponseClient(test['key'],
-                        test['client_ocrasuite'].encode('ascii'), test['server_ocrasuite'].encode('ascii'))
+                        test['client_ocrasuite'], test['server_ocrasuite'])
                 ocra_server = OCRAMutualChallengeResponseServer(test['key'],
-                        test['server_ocrasuite'].encode('ascii'), test['client_ocrasuite'].encode('ascii'))
+                        test['server_ocrasuite'], test['client_ocrasuite'])
                 Q = server_instance['params']['Q']
                 qc, qs = Q[:8], Q[8:]
                 # ignore computed challenge

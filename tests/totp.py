@@ -11,9 +11,9 @@ def parse_tv(tv):
 
 class Totp(unittest.TestCase):
     key_seed = '1234567890'.encode('ascii') # no effect in Python 2.x but makes a bytes intance in Python 3.x
-    key_sha1 = binascii.hexlify(key_seed*2)
-    key_sha256 = binascii.hexlify(key_seed*3+'12'.encode('ascii'))
-    key_sha512 = binascii.hexlify(key_seed*6+'1234'.encode('ascii'))
+    key_sha1 = binascii.hexlify(key_seed*2).decode('ascii')
+    key_sha256 = binascii.hexlify(key_seed*3+'12'.encode('ascii')).decode('ascii')
+    key_sha512 = binascii.hexlify(key_seed*6+'1234'.encode('ascii')).decode('ascii')
 
     tv = parse_tv('''|      59     |  1970-01-01  | 0000000000000001 | 94287082 |  SHA1  |
    |             |   00:00:59   |                  |          |        |

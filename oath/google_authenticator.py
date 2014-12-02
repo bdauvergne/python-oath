@@ -10,12 +10,13 @@ APIs provided by the oath.hotp and oath.totp modules.
 '''
 
 try:
-	from urlparse import urlparse, parse_qs
+    from urlparse import urlparse, parse_qs
+    from urllib import urlencode
 except ImportError:
-	from urllib.parse import urlparse, parse_qs
+    from urllib.parse import urlparse, parse_qs, urlencode
 import base64
 import hashlib
-import urllib
+import binascii
 
 from oath import _hotp as hotp
 from oath import _totp as totp
@@ -37,7 +38,7 @@ DRIFT    =   'drift'
 def lenient_b32decode(data):
     data = data.upper()  # Ensure correct case
     data += ('=' * ((8 - len(data)) % 8))  # Ensure correct padding
-    return base64.b32decode(data)
+    return base64.b32decode(data.encode('ascii'))
 
 
 def parse_otpauth(otpauth_uri):
@@ -54,7 +55,7 @@ def parse_otpauth(otpauth_uri):
     if SECRET not in params:
         raise ValueError('Missing secret field in otpauth URI', otpauth_uri)
     try:
-        params[SECRET] = lenient_b32decode(params[SECRET]).encode('hex')
+        params[SECRET] = binascii.hexlify(lenient_b32decode(params[SECRET])).decode('ascii')
     except TypeError:
         raise ValueError('Invalid base32 encoding of the secret field in '
                 'otpauth URI', otpauth_uri)
@@ -101,7 +102,7 @@ def from_b32key(b32_key, state=None):
     except TypeError:
         raise ValueError('invalid base32 value')
     return GoogleAuthenticator('otpauth://totp/xxx?%s' %
-            urllib.urlencode({'secret': b32_key}), state=state)
+            urlencode({'secret': b32_key}), state=state)
 
 
 class GoogleAuthenticator(object):

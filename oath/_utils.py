@@ -13,6 +13,15 @@ else:
     def fromhex(s):
         return s.decode('hex')
 
+def tobytes(b_or_s):
+    try:
+        if isinstance(b_or_s, bytes):
+            return b_or_s
+    except NameError:
+        if isinstance(b_or_s, str):
+            return b_or_s
+    return b_or_s.encode('utf8')
+
 def compare_digest(a, b):
     if not isinstance(a, str) or not isinstance(b, str):
         raise TypeError
