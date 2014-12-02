@@ -26,8 +26,8 @@ def is_int(v):
 
 # Constants
 PERIODS = { 'H': 3600, 'M': 60, 'S': 1 }
-HOTP = 'HOTP'
-OCRA_1 = 'OCRA-1'
+HOTP = 'HOTP'.encode('ascii')
+OCRA_1 = 'OCRA-1'.encode('ascii')
 
 class CryptoFunction(object):
     '''Represents an OCRA CryptoFunction specification.
@@ -79,9 +79,9 @@ def str2hashalgo(description):
            the name of the hash algorithm, example
        :rtype: a hash algorithm class constructor
     '''
-    algo = getattr(hashlib, description.lower(), None)
+    algo = getattr(hashlib, description.decode('ascii').lower(), None)
     if not callable(algo):
-        raise ValueError, ('Unknown hash algorithm', description)
+        raise ValueError('Unknown hash algorithm %s' % description)
     return algo
 
 def str2cryptofunction(crypto_function_description):
@@ -94,18 +94,18 @@ def str2cryptofunction(crypto_function_description):
            the CryptoFunction object
        :rtype: CryptoFunction
     '''
-    s = crypto_function_description.split('-')
+    s = crypto_function_description.split('-'.encode('ascii'))
     if len(s) != 3:
-        raise ValueError, 'CryptoFunction description must be triplet separated by -'
+        raise ValueError('CryptoFunction description must be triplet separated by -')
     if s[0] != HOTP:
-        raise ValueError, ('Unknown CryptoFunction kind', s[0])
+        raise ValueError('Unknown CryptoFunction kind %s' % s[0])
     algo = str2hashalgo(s[1])
     try:
         truncation_length = int(s[2])
         if truncation_length < 0 or truncation_length > 10:
-            raise ValueError
+            raise ValueError()
     except ValueError:
-        raise ValueError, ('Invalid truncation length', s[2])
+        raise ValueError('Invalid truncation length %s' % s[2])
     return CryptoFunction(algo, truncation_length)
 
 class DataInput(object):
@@ -128,14 +128,14 @@ class DataInput(object):
 
     def __call__(self, C=None, Q=None, P=None, P_digest=None, S=None, T=None,
             T_precomputed=None, Qsc=None):
-        datainput = ''
+        datainput = ''.encode('ascii')
         if self.C:
             try:
                 C = int(C)
                 if C < 0 or C > 2**64:
                     raise Exception()
             except:
-                raise ValueError, ('Invalid counter value', C)
+                raise ValueError('Invalid counter value %s' % C)
             datainput += hotp.int2beint64(int(C))
         if self.Q:
             max_length = self.Q[1]
@@ -144,41 +144,41 @@ class DataInput(object):
                 Q = Qsc
                 max_length *= 2
             if Q is None or not isinstance(Q, str) or len(Q) > max_length:
-                raise ValueError, 'challenge'
+                raise ValueError('challenge')
             if self.Q[0] == 'N' and not Q.isdigit():
-                raise ValueError, 'challenge'
+                raise ValueError('challenge')
             if self.Q[0] == 'A' and not Q.isalnum():
-                raise ValueError, 'challenge'
+                raise ValueError('challenge')
             if self.Q[0] == 'H':
                 try:
                     int(Q, 16)
                 except ValueError:
-                    raise ValueError, 'challenge'
+                    raise ValueError('challenge')
             if self.Q[0] == 'N':
                 Q = '%x' % int(Q)
                 Q += '0' * (len(Q) % 2)
-                Q = Q.decode('hex')
+                Q = _utils.fromhex(Q)
             if self.Q[0] == 'A':
                 pass
             if self.Q[0] == 'H':
-                Q = Q.decode('hex')
+                Q = _utils.fromhex(Q)
             datainput += Q
-            datainput += '\0' * (128-len(Q))
+            datainput += '\0'.encode('ascii') * (128-len(Q))
         if self.P:
             if P_digest:
                 if len(P) == self.P.digest_size:
                     datainput += P_digest
                 elif len(P) == 2*self.P.digest_size:
-                    datainput += P_digest.decode('hex')
+                    datainput += _utils.fromhex(P_digest)
                 else:
-                    raise ValueError, ('Pin/Password digest invalid', P_digest)
+                    raise ValueError('Pin/Password digest invalid %s' % P_digest)
             elif P is None:
-                raise ValueError, 'Pin/Password missing'
+                raise ValueError('Pin/Password missing')
             else:
                 datainput += self.P(P).digest()
         if self.S:
             if S is None or len(S) != self.S:
-                raise ValueError, 'session'
+                raise ValueError('session')
             datainput += S
         if self.T:
             if is_int(T_precomputed):
@@ -186,7 +186,7 @@ class DataInput(object):
             elif is_int(T):
                 datainput += hotp.int2beint64(int(T / self.T))
             else:
-                raise ValueError, 'timestamp'
+                raise ValueError('timestamp')
         return datainput
 
     def __str__(self):
@@ -200,55 +200,55 @@ class DataInput(object):
 
 
 def str2datainput(datainput_description):
-    elements = datainput_description.split('-')
+    elements = datainput_description.split('-'.encode('ascii'))
     datainputs = {}
     for element in elements:
         letter = element[0]
         if letter in datainputs:
-            raise ValueError, ('DataInput alreadu present %s', element, datainput_description)
-        if letter == 'C':
-            datainputs['C'] = 1
-        elif letter == 'Q':
+            raise ValueError('DataInput already present %s %s' % (element, datainput_description))
+        if letter == 'C'.encode('ascii'):
+            datainputs[letter] = 1
+        elif letter == 'Q'.encode('ascii'):
             if len(element) == 1:
-                datainputs['Q'] = ('N',8)
+                datainputs[letter] = ('N',8)
             else:
                 second_letter = element[1]
                 try:
                     if second_letter not in 'ANH':
-                        raise ValueError
+                        raise ValueError()
                     length = int(element[2:])
                     if length < 4 or length > 64:
-                        raise ValueError
+                        raise ValueError()
                 except ValueError:
-                    raise ValueError, ('Invalid challenge descriptor', element)
-                datainputs['Q'] = (second_letter, length)
-        elif letter == 'P':
+                    raise ValueError('Invalid challenge descriptor %s' % element)
+                datainputs[letter] = (second_letter, length)
+        elif letter == 'P'.encode('ascii'):
             algo = str2hashalgo(element[1:] or 'SHA1')
-            datainputs['P'] = algo
-        elif letter == 'S':
+            datainputs[letter] = algo
+        elif letter == 'S'.encode('ascii'):
             length = 64
             if element[1:]:
                 try:
                     length = int(element[1:])
                 except ValueError:
-                    raise ValueError, ('Invalid session data descriptor', element)
-            datainputs['S'] = length
-        elif letter == 'T':
+                    raise ValueError('Invalid session data descriptor %s' % element)
+            datainputs[letter] = length
+        elif letter == 'T'.encode('ascii'):
             complement = element[1:] or '1M'
             try:
                 length = 0
                 if not re.match('^(\d+[HMS])+$', complement):
-                    raise ValueError
+                    raise ValueError()
                 parts = re.findall('\d+[HMS]', complement)
                 for part in parts:
                     period = part[-1]
                     quantity = int(part[:-1])
                     length += quantity * PERIODS[period]
-                datainputs['T'] = length
+                datainputs[letter] = length
             except ValueError:
-                raise ValueError, ('Invalid timestamp descriptor', element)
+                raise ValueError('Invalid timestamp descriptor %s' % element)
         else:
-            raise ValueError, ('Invalid datainput descriptor', element)
+            raise ValueError('Invalid datainput descriptor %s' % element)
     return DataInput(**datainputs)
 
 
@@ -259,7 +259,7 @@ class OcraSuite(object):
         self.data_input = data_input
 
     def __call__(self, key, **kwargs):
-        data_input = self.ocrasuite_description + '\0' \
+        data_input = self.ocrasuite_description + '\0'.encode('ascii') \
                 + self.data_input(**kwargs)
         return self.crypto_function(key, data_input)
 
@@ -271,11 +271,11 @@ class OcraSuite(object):
                 self.data_input)
 
 def str2ocrasuite(ocrasuite_description):
-    elements = ocrasuite_description.split(':')
+    elements = ocrasuite_description.split(':'.encode('ascii'))
     if len(elements) != 3:
-        raise ValueError, ('Bad OcraSuite description', ocrasuite_description)
+        raise ValueError('Bad OcraSuite description %s' % ocrasuite_description)
     if elements[0] != OCRA_1:
-        raise ValueError, ('Unsupported OCRA identifier', elements[0])
+        raise ValueError('Unsupported OCRA identifier %s' % elements[0])
     crypto_function = str2cryptofunction(elements[1])
     data_input = str2datainput(elements[2])
     return OcraSuite(ocrasuite_description, crypto_function, data_input)
@@ -294,7 +294,7 @@ class OCRAChallengeResponse(object):
         self.remote_ocrasuite = remote_ocrasuite_description is not None \
                 and str2ocrasuite(remote_ocrasuite_description)
         if not self.ocrasuite.data_input.Q:
-            raise ValueError, ('Ocrasuite must have a Q descriptor',)
+            raise ValueError('Ocrasuite must have a Q descriptor')
 
 def compute_challenge(Q):
     kind, length = Q
@@ -307,7 +307,7 @@ def compute_challenge(Q):
     elif kind == 'H':
         c = ''.join([random.choice(string.hexdigits) for i in r])
     else:
-        raise ValueError, ('Q kind is unknown:', kind)
+        raise ValueError('Q kind is unknown: %s' % kind)
     return c
 
 class OCRAChallengeResponseServer(OCRAChallengeResponse):
