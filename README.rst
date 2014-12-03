@@ -12,6 +12,7 @@ python-oath is a package implementing the three main OATH specifications:
  - TOTP, a time based OTP,
  - OCRA, a mixed OTP / signature system based on HOTP for complex use cases.
 
+ It's Python 3 ready.
 
 Getting started
 ===============
