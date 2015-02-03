@@ -147,7 +147,7 @@ class GoogleAuthenticator(object):
                     backward_drift=hotp_backward_drift)
             return ok
         elif self.parsed_otpauth_uri[TYPE] == TOTP:
-            period = 'dec%s' % self.parsed_otpauth_uri[PERIOD]
+            period = self.parsed_otpauth_uri[PERIOD]
             if DRIFT not in state:
                 state[DRIFT] = 0
             ok, state[DRIFT] = totp.accept_totp(secret, otp, format=format,
