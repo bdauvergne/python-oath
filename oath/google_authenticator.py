@@ -16,10 +16,10 @@ except ImportError:
     from urllib.parse import urlparse, parse_qs, urlencode
 import base64
 import hashlib
-import binascii
 
 from oath import _hotp as hotp
 from oath import _totp as totp
+from . import _utils
 
 __all__ = ('GoogleAuthenticator', 'from_b32key')
 
@@ -55,7 +55,7 @@ def parse_otpauth(otpauth_uri):
     if SECRET not in params:
         raise ValueError('Missing secret field in otpauth URI', otpauth_uri)
     try:
-        params[SECRET] = binascii.hexlify(lenient_b32decode(params[SECRET])).decode('ascii')
+        params[SECRET] = _utils.tohex(lenient_b32decode(params[SECRET]))
     except TypeError:
         raise ValueError('Invalid base32 encoding of the secret field in '
                 'otpauth URI', otpauth_uri)

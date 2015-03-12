@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-import binascii
 import struct
 
 from . import _utils
@@ -37,7 +36,7 @@ def int2beint64(i):
 
 def __hotp(key, counter, hash=hashlib.sha1):
     bin_counter = int2beint64(counter)
-    bin_key = binascii.unhexlify(key.encode('ascii'))
+    bin_key = _utils.fromhex(key)
 
     return hmac.new(bin_key, bin_counter, hash).digest()
 
@@ -83,7 +82,7 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
     elif format == 'hex':
         return '%x' % truncated_value(bin_hotp)
     elif format == 'hex-notrunc':
-        return binascii.hexlify(bin_hotp).decode('ascii')
+        return _utils.tohex(bin_hotp)
     elif format == 'bin':
         return bin_hotp
     elif format == 'dec':
