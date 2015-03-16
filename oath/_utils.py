@@ -6,12 +6,17 @@ except ImportError:
 
 if hasattr(bytes, 'fromhex'):
     # Python 3.x
+    import binascii
     def fromhex(s):
         return bytes.fromhex(s)
+    def tohex(bin):
+        return binascii.hexlify(bin).decode('ascii')
 else:
     # Python 2.x
     def fromhex(s):
         return s.decode('hex')
+    def tohex(bin):
+        return bin.encode('hex')
 
 def tobytes(b_or_s):
     try:
