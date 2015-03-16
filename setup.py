@@ -4,6 +4,7 @@ from unittest import TextTestRunner, TestLoader
 from glob import glob
 from os.path import splitext, basename, join as pjoin
 import os
+import sys
 
 class TestCommand(Command):
     user_options = [ ]
@@ -27,7 +28,9 @@ class TestCommand(Command):
 
         tests = TestLoader().loadTestsFromNames(testfiles)
         t = TextTestRunner(verbosity = 4)
-        t.run(tests)
+        res = t.run(tests)
+        if res.errors:
+            sys.exit(1)
 
 setup(name='oath',
         version='1.2',
