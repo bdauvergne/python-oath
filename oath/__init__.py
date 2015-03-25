@@ -4,4 +4,4 @@ from oath._ocra import *
 from oath.google_authenticator import *
 from oath._utils import fromhex, tohex
 
-__version__ = VERSION = '1.3.0'
+__version__ = VERSION = '1.4.0'
