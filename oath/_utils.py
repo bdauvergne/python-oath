@@ -28,8 +28,19 @@ def tobytes(b_or_s):
     return b_or_s.encode('utf8')
 
 def compare_digest(a, b):
-    if not isinstance(a, str) or not isinstance(b, str):
-        raise TypeError
+    if not hasattr(bytes, 'fromhex'): # Python 2
+        if isinstance(a, unicode):
+            a = a.decode('ascii')
+        if isinstance(b, unicode):
+            a = a.decode('ascii')
+    if type(a) != type(b):
+        raise TypeError('compared digest must be of the same type')
+    if hasattr(bytes, 'fromhex'): # Python 3
+        if not isinstance(a, (bytes, str)):
+            raise TypeError('digest must be bytes or str')
+    else: # Python 2
+        if not isinstance(a, (str, unicode)):
+            raise TypeError('digest must be str or unicode')
     if len(a) != len(b):
         return False
     return all(map(lambda x: x[0] == x[1], zip(a, b)))

@@ -70,3 +70,6 @@ class Totp(unittest.TestCase):
             algo = self.hash_algos[algo_key]
             self.assertTrue(accept_totp(algo['key'], response, t=int(t),
                 hash=algo['alg'], format='dec8'))
+
+    def test_totp_unicode(self):
+        accept_totp(u'3133327375706e65726473', u'4e4ba93d', format='hex', period=1800)
