@@ -32,5 +32,5 @@ def compare_digest(a, b):
         raise TypeError
     if len(a) != len(b):
         return False
-    return reduce(bool.__and__, map(lambda x: x[0] == x[1], zip(a, b)))
+    return all(map(lambda x: x[0] == x[1], zip(a, b)))
 
