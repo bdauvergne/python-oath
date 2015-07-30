@@ -20,3 +20,11 @@ class GoogleAuthenticator(unittest.TestCase):
         )
         for t, uri, result in l:
             self.assertEquals(GoogleAuthenticator(uri).generate(t=t), result)
+
+    def test_generate_accept(self):
+        from oath.google_authenticator import from_b32key
+
+        secret = 'GG'
+        gauth = from_b32key(secret)
+        self.assertTrue(gauth.accept(gauth.generate()))
+        self.assertFalse(gauth.accept('111111'))
