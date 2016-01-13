@@ -29,12 +29,13 @@ def totp(key, format='dec6', period=30, t=None, hash=hashlib.sha1):
            the TOTP key given as an hexadecimal string
        :param format:
            the output format, can be:
-              - hex40, for a 40 characters hexadecimal format,
+              - hex, for a variable length hexadecimal format,
+              - hex-notrunc, for a 40 characters hexadecimal non-truncated format,
               - dec4, for a 4 characters decimal format,
               - dec6,
               - dec7, or
               - dec8
-           it default to dec6.
+           it defaults to dec6.
        :param period:
            a positive integer giving the period between changes of the OTP
            value, as seconds, it defaults to 30.
