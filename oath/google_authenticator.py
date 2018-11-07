@@ -15,7 +15,7 @@ try:
     from urlparse import urlparse, parse_qs
     from urllib import urlencode, quote
 except ImportError:
-    from urllib.parse import urlparse, parse_qs, urlencode
+    from urllib.parse import urlparse, parse_qs, urlencode, quote
 import base64
 import hashlib
 
