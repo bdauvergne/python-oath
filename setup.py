@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='oath',
-        version='1.4.1',
+        version='1.4.2',
         license='BSD 3-clause',
         description='Python implementation of the three main OATH specifications: HOTP, TOTP and OCRA',
         url='https://github.com/bdauvergne/python-oath',
