@@ -237,9 +237,9 @@ def str2datainput(datainput_description):
             complement = element[1:] or '1M'
             try:
                 length = 0
-                if not re.match('^(\d+[HMS])+$', complement):
+                if not re.match(r'^(\d+[HMS])+$', complement):
                     raise ValueError()
-                parts = re.findall('\d+[HMS]', complement)
+                parts = re.findall(r'\d+[HMS]', complement)
                 for part in parts:
                     period = part[-1]
                     quantity = int(part[:-1])
