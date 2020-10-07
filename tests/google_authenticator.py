@@ -1,13 +1,15 @@
 import unittest
 
+
 class GoogleAuthenticator(unittest.TestCase):
     def test_simple(self):
         from oath.google_authenticator import from_b32key
+
         l = (
-                # generated from http://gauth.apps.gbraad.nl/
-                (1391203240, 'GG', '762819'),
-                (1391203342, 'FF', '737839'),
-            )
+            # generated from http://gauth.apps.gbraad.nl/
+            (1391203240, 'GG', '762819'),
+            (1391203342, 'FF', '737839'),
+        )
         for t, b32_key, result in l:
             self.assertEquals(from_b32key(b32_key).generate(t=t), result)
 
@@ -41,9 +43,9 @@ class GoogleAuthenticatorURI(unittest.TestCase):
 
         assert False, "should not generate based on a odd number of caracters secret"
 
-    
     def test_type_error(self):
         from oath.google_authenticator import GoogleAuthenticatorURI
+
         try:
             GoogleAuthenticatorURI().generate('ECEA', type='totp')
             GoogleAuthenticatorURI().generate('ECEA', type='hotp')
@@ -57,9 +59,9 @@ class GoogleAuthenticatorURI(unittest.TestCase):
 
         assert False, "only totp and hotp types are accepted"
 
-
     def test_algo_error(self):
         from oath.google_authenticator import GoogleAuthenticatorURI
+
         try:
             GoogleAuthenticatorURI().generate('ECEA', algo='sha1')
             GoogleAuthenticatorURI().generate('ECEA', algo='sha256')
@@ -74,9 +76,9 @@ class GoogleAuthenticatorURI(unittest.TestCase):
 
         assert False, "only sha1, sha256 and sha512 algo should be accepted"
 
-
     def test_counter_error(self):
         from oath.google_authenticator import GoogleAuthenticatorURI
+
         try:
             GoogleAuthenticatorURI().generate('ECEA', init_counter=12)
         except ValueError:
@@ -91,24 +93,20 @@ class GoogleAuthenticatorURI(unittest.TestCase):
             GoogleAuthenticatorURI().generate('ECEA', init_counter=-1, type='hotp')
         except ValueError:
             None
-    
 
-    def random_base32(self, l=16, random=None,
-                      chars=list('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567')):
+    def random_base32(self, l=16, random=None, chars=list('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567')):
 
         # Use secrets module if available (Python version >= 3.6) per PEP 506
         try:
             import secrets
+
             random = secrets.SystemRandom()
         except ImportError:
             import random as _random
+
             random = _random.SystemRandom()
 
-        return ''.join(
-            random.choice(chars)
-            for _ in range(l)
-        )
-
+        return ''.join(random.choice(chars) for _ in range(l))
 
     def test_reverse_uri_1(self):
         from oath.google_authenticator import GoogleAuthenticatorURI
@@ -120,9 +118,7 @@ class GoogleAuthenticatorURI(unittest.TestCase):
         a = base64.b32decode(k.encode('ascii'))
         key = binascii.hexlify(a).decode('ascii')
 
-        u = GoogleAuthenticatorURI().generate(key,
-                                              issuer='meta-x org',
-                                              account='ach@meta-x.org')
+        u = GoogleAuthenticatorURI().generate(key, issuer='meta-x org', account='ach@meta-x.org')
 
         a = parse_otpauth(u)
 
@@ -138,7 +134,6 @@ class GoogleAuthenticatorURI(unittest.TestCase):
         if a['digits'] != 6:
             assert False, "bad digits"
 
-
     def test_reverse_uri_2(self):
         from oath.google_authenticator import GoogleAuthenticatorURI
         from oath.google_authenticator import parse_otpauth
@@ -149,12 +144,9 @@ class GoogleAuthenticatorURI(unittest.TestCase):
         a = base64.b32decode(k.encode('ascii'))
         key = binascii.hexlify(a).decode('ascii')
 
-        u = GoogleAuthenticatorURI().generate(key,
-                                              issuer='meta-x org',
-                                              account='ach@meta-x.org',
-                                              type='hotp',
-                                              algo='sha256',
-                                              init_counter=8)
+        u = GoogleAuthenticatorURI().generate(
+            key, issuer='meta-x org', account='ach@meta-x.org', type='hotp', algo='sha256', init_counter=8
+        )
 
         a = parse_otpauth(u)
 

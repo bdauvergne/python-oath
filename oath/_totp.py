@@ -21,6 +21,7 @@ from ._hotp import hotp
 
 __all__ = ('totp', 'accept_totp')
 
+
 def totp(key, format='dec6', period=30, t=None, hash=hashlib.sha1):
     '''
        Compute a TOTP value as prescribed by OATH specifications.
@@ -58,11 +59,21 @@ def totp(key, format='dec6', period=30, t=None, hash=hashlib.sha1):
             t = calendar.timegm(t.utctimetuple())
         else:
             t = int(t)
-    T = int(t/period)
+    T = int(t / period)
     return hotp(key, T, format=format, hash=hash)
 
-def accept_totp(key, response, format='dec6', period=30, t=None,
-        hash=hashlib.sha1, forward_drift=1, backward_drift=1, drift=0):
+
+def accept_totp(
+    key,
+    response,
+    format='dec6',
+    period=30,
+    t=None,
+    hash=hashlib.sha1,
+    forward_drift=1,
+    backward_drift=1,
+    drift=0,
+):
     '''
        Validate a TOTP value inside a window of 
        [drift-bacward_drift:drift+forward_drift] of time steps.
@@ -125,8 +136,8 @@ def accept_totp(key, response, format='dec6', period=30, t=None,
     '''
     if t is None:
         t = int(time.time())
-    for i in range(max(-divmod(t, period)[0],-backward_drift),forward_drift+1):
-        d = (drift+i) * period
-        if _utils.compare_digest(totp(key, format=format, period=period, hash=hash, t=t+d), response):
-            return True, drift+i
+    for i in range(max(-divmod(t, period)[0], -backward_drift), forward_drift + 1):
+        d = (drift + i) * period
+        if _utils.compare_digest(totp(key, format=format, period=period, hash=hash, t=t + d), response):
+            return True, drift + i
     return False, 0

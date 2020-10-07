@@ -13,9 +13,15 @@ from . import _hotp as hotp, _utils
     See also http://tools.ietf.org/html/draft-mraihi-mutual-oath-hotp-variants-14
 '''
 
-__all__ = ('str2ocrasuite', 'StateException', 'OCRAChallengeResponseServer',
-    'OCRAChallengeResponseClient', 'OCRAMutualChallengeResponseServer',
-    'OCRAMutualChallengeResponseClient')
+__all__ = (
+    'str2ocrasuite',
+    'StateException',
+    'OCRAChallengeResponseServer',
+    'OCRAChallengeResponseClient',
+    'OCRAMutualChallengeResponseServer',
+    'OCRAMutualChallengeResponseClient',
+)
+
 
 def is_int(v):
     try:
@@ -24,10 +30,12 @@ def is_int(v):
     except ValueError:
         return False
 
+
 # Constants
-PERIODS = { 'H': 3600, 'M': 60, 'S': 1 }
+PERIODS = {'H': 3600, 'M': 60, 'S': 1}
 HOTP = 'HOTP'
 OCRA_1 = 'OCRA-1'
+
 
 class CryptoFunction(object):
     '''Represents an OCRA CryptoFunction specification.
@@ -39,6 +47,7 @@ class CryptoFunction(object):
            the length to truncate the decimal representation, can be None, in
            this case no truncation is done.
     '''
+
     def __init__(self, hash_algo, truncation_length):
         assert hash_algo
         assert is_int(truncation_length) or truncation_length is None
@@ -70,6 +79,7 @@ class CryptoFunction(object):
         '''
         return 'HOTP-%s-%s' % (self.hash_algo.__name__, self.truncation_length)
 
+
 def str2hashalgo(description):
     '''Convert the name of a hash algorithm as described in the OATH
        specifications, to a python object handling the digest algorithm
@@ -83,6 +93,7 @@ def str2hashalgo(description):
     if not callable(algo):
         raise ValueError('Unknown hash algorithm %s' % description)
     return algo
+
 
 def str2cryptofunction(crypto_function_description):
     '''
@@ -108,6 +119,7 @@ def str2cryptofunction(crypto_function_description):
         raise ValueError('Invalid truncation length %s' % s[2])
     return CryptoFunction(algo, truncation_length)
 
+
 class DataInput(object):
     '''
        OCRA data input description
@@ -117,7 +129,7 @@ class DataInput(object):
        to give to the HMAC algorithme implemented by a CryptoFunction object
     '''
 
-    __slots__ = [ 'C', 'Q', 'P', 'S', 'T' ]
+    __slots__ = ['C', 'Q', 'P', 'S', 'T']
 
     def __init__(self, C=None, Q=None, P=None, S=None, T=None):
         self.C = C
@@ -126,13 +138,12 @@ class DataInput(object):
         self.S = S
         self.T = T
 
-    def __call__(self, C=None, Q=None, P=None, P_digest=None, S=None, T=None,
-            T_precomputed=None, Qsc=None):
+    def __call__(self, C=None, Q=None, P=None, P_digest=None, S=None, T=None, T_precomputed=None, Qsc=None):
         datainput = b''
         if self.C:
             try:
                 C = int(C)
-                if C < 0 or C > 2**64:
+                if C < 0 or C > 2 ** 64:
                     raise Exception()
             except:
                 raise ValueError('Invalid counter value %s' % C)
@@ -163,12 +174,12 @@ class DataInput(object):
             if self.Q[0] == 'H':
                 Q = _utils.fromhex(Q)
             datainput += _utils.tobytes(Q)
-            datainput += _utils.tobytes('\0' * (128-len(Q)))
+            datainput += _utils.tobytes('\0' * (128 - len(Q)))
         if self.P:
             if P_digest:
                 if len(P_digest) == self.P.digest_size:
                     datainput += _utils.tobytes(P_digest)
-                elif len(P_digest) == 2*self.P.digest_size:
+                elif len(P_digest) == 2 * self.P.digest_size:
                     datainput += _utils.fromhex(_utils.tobytes(P_digest))
                 else:
                     raise ValueError('Pin/Password digest invalid %r' % P_digest)
@@ -198,7 +209,6 @@ class DataInput(object):
         return '<{0} {1}>'.format(DataInput.__class__.__name__, ', '.join(values))
 
 
-
 def str2datainput(datainput_description):
     elements = datainput_description.split('-')
     datainputs = {}
@@ -210,7 +220,7 @@ def str2datainput(datainput_description):
             datainputs[letter] = 1
         elif letter == 'Q':
             if len(element) == 1:
-                datainputs[letter] = ('N',8)
+                datainputs[letter] = ('N', 8)
             else:
                 second_letter = element[1]
                 try:
@@ -259,16 +269,15 @@ class OcraSuite(object):
         self.data_input = data_input
 
     def __call__(self, key, **kwargs):
-        data_input = self.ocrasuite_description.encode('ascii') + b'\0' \
-                + self.data_input(**kwargs)
+        data_input = self.ocrasuite_description.encode('ascii') + b'\0' + self.data_input(**kwargs)
         return self.crypto_function(key, data_input)
 
     def accept(self, response, key, **kwargs):
         return _utils.compare_digest(str(response), self(key, **kwargs))
 
     def __str__(self):
-        return '<OcraSuite crypto_function:%s data_input:%s>' % (self.crypto_function,
-                self.data_input)
+        return '<OcraSuite crypto_function:%s data_input:%s>' % (self.crypto_function, self.data_input)
+
 
 def str2ocrasuite(ocrasuite_description):
     elements = ocrasuite_description.split(':')
@@ -280,10 +289,13 @@ def str2ocrasuite(ocrasuite_description):
     data_input = str2datainput(elements[2])
     return OcraSuite(ocrasuite_description, crypto_function, data_input)
 
+
 class StateException(Exception):
     pass
 
+
 DEFAULT_LENGTH = 20
+
 
 class OCRAChallengeResponse(object):
     state = 1
@@ -291,10 +303,12 @@ class OCRAChallengeResponse(object):
     def __init__(self, key, ocrasuite_description, remote_ocrasuite_description=None):
         self.key = key
         self.ocrasuite = str2ocrasuite(ocrasuite_description)
-        self.remote_ocrasuite = remote_ocrasuite_description is not None \
-                and str2ocrasuite(remote_ocrasuite_description)
+        self.remote_ocrasuite = remote_ocrasuite_description is not None and str2ocrasuite(
+            remote_ocrasuite_description
+        )
         if not self.ocrasuite.data_input.Q:
             raise ValueError('Ocrasuite must have a Q descriptor')
+
 
 def compute_challenge(Q):
     kind, length = Q
@@ -312,6 +326,7 @@ def compute_challenge(Q):
     else:
         raise ValueError('Q kind is unknown: %s' % kind)
     return c
+
 
 class OCRAChallengeResponseServer(OCRAChallengeResponse):
     SERVER_STATE_COMPUTE_CHALLENGE = 1
@@ -340,6 +355,7 @@ class OCRAChallengeResponseClient(OCRAChallengeResponse):
     def compute_response(self, challenge, **kwargs):
         return self.ocrasuite(self.key, Q=challenge, **kwargs)
 
+
 class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
     CLIENT_STATE_COMPUTE_CLIENT_CHALLENGE = 1
     CLIENT_STATE_VERIFY_SERVER_RESPONSE = 2
@@ -359,7 +375,7 @@ class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
         if self.state != self.CLIENT_STATE_VERIFY_SERVER_RESPONSE:
             return StateException()
         self.server_challenge = challenge
-        q = self.client_challenge+self.server_challenge
+        q = self.client_challenge + self.server_challenge
         ocrasuite = self.remote_ocrasuite or self.ocrasuite
         c = _utils.compare_digest(ocrasuite(self.key, Qsc=q, **kwargs), response)
         if c:
@@ -369,10 +385,11 @@ class OCRAMutualChallengeResponseClient(OCRAChallengeResponse):
     def compute_client_response(self, **kwargs):
         if self.state != self.CLIENT_STATE_COMPUTE_CLIENT_RESPONSE:
             return StateException()
-        q = self.server_challenge+self.client_challenge
+        q = self.server_challenge + self.client_challenge
         rc = self.ocrasuite(self.key, Qsc=q, **kwargs)
         self.state = self.CLIENT_STATE_FINISHED
         return rc
+
 
 class OCRAMutualChallengeResponseServer(OCRAChallengeResponse):
     SERVER_STATE_COMPUTE_SERVER_RESPONSE = 1
@@ -384,7 +401,7 @@ class OCRAMutualChallengeResponseServer(OCRAChallengeResponse):
             raise StateException()
         self.client_challenge = challenge
         self.server_challenge = Qs or compute_challenge(self.ocrasuite.data_input.Q)
-        q = self.client_challenge+self.server_challenge
+        q = self.client_challenge + self.server_challenge
         # no need for pin with server mode
         kwargs.pop('P', None)
         kwargs.pop('P_digest', None)
@@ -395,7 +412,7 @@ class OCRAMutualChallengeResponseServer(OCRAChallengeResponse):
     def verify_client_response(self, response, **kwargs):
         if self.state != self.SERVER_STATE_VERIFY_CLIENT_RESPONSE:
             raise StateException()
-        q = self.server_challenge+self.client_challenge
+        q = self.server_challenge + self.client_challenge
         ocrasuite = self.remote_ocrasuite or self.ocrasuite
         c = _utils.compare_digest(ocrasuite(self.key, Qsc=q, **kwargs), response)
         if c:

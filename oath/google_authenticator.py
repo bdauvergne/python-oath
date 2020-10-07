@@ -27,22 +27,22 @@ import binascii
 
 __all__ = ('GoogleAuthenticator', 'from_b32key', 'GoogleAuthenticatorURI')
 
-LABEL   =   'label'
-TYPE    =    'type'
+LABEL = 'label'
+TYPE = 'type'
 ALGORITHM = 'algorithm'
-DIGITS  =  'digits'
-SECRET  =  'secret'
+DIGITS = 'digits'
+SECRET = 'secret'
 COUNTER = 'counter'
-PERIOD  =  'period'
-TOTP    =    'totp'
-HOTP    =    'hotp'
-DRIFT   =   'drift'
-ISSUER  = 'issuer'
+PERIOD = 'period'
+TOTP = 'totp'
+HOTP = 'hotp'
+DRIFT = 'drift'
+ISSUER = 'issuer'
 
 
 def lenient_b32decode(data):
     data = data.upper()  # Ensure correct case
-    data += ('=' * ((8 - len(data)) % 8))  # Ensure correct padding
+    data += '=' * ((8 - len(data)) % 8)  # Ensure correct padding
     return base64.b32decode(data.encode('ascii'))
 
 
@@ -62,39 +62,37 @@ def parse_otpauth(otpauth_uri):
     try:
         params[SECRET] = _utils.tohex(lenient_b32decode(params[SECRET]))
     except TypeError:
-        raise ValueError('Invalid base32 encoding of the secret field in '
-                         'otpauth URI', otpauth_uri)
+        raise ValueError('Invalid base32 encoding of the secret field in ' 'otpauth URI', otpauth_uri)
     if ALGORITHM in params:
         params[ALGORITHM] = params[ALGORITHM].lower()
         if params[ALGORITHM] not in ('sha1', 'sha256', 'sha512', 'md5'):
-            raise ValueError('Invalid value for algorithm field in otpauth '
-                             'URI', otpauth_uri)
+            raise ValueError('Invalid value for algorithm field in otpauth ' 'URI', otpauth_uri)
     else:
         params[ALGORITHM] = 'sha1'
     try:
         params[ALGORITHM] = getattr(hashlib, params[ALGORITHM])
     except AttributeError:
-        raise ValueError('Unsupported algorithm %s in othauth URI' %
-                         params[ALGORITHM], otpauth_uri)
+        raise ValueError('Unsupported algorithm %s in othauth URI' % params[ALGORITHM], otpauth_uri)
 
     for key in (DIGITS, PERIOD, COUNTER):
         try:
             if key in params:
                 params[key] = int(params[key])
         except ValueError:
-            raise ValueError('Invalid value for field %s in otpauth URI, must '
-                             'be a number' % key, otpauth_uri)
+            raise ValueError(
+                'Invalid value for field %s in otpauth URI, must ' 'be a number' % key, otpauth_uri
+            )
     if COUNTER not in params:
-        params[COUNTER] = 0 # what else ?
+        params[COUNTER] = 0  # what else ?
     if DIGITS in params:
         if params[DIGITS] not in (6, 8):
-            raise ValueError('Invalid value for field digits in othauth URI, it '
-                             'must 6 or 8', otpauth_uri)
+            raise ValueError('Invalid value for field digits in othauth URI, it ' 'must 6 or 8', otpauth_uri)
     else:
         params[DIGITS] = 6
     if params[TYPE] == HOTP and COUNTER not in params:
-        raise ValueError('Missing field counter in otpauth URI, it is '
-                         'mandatory with the hotp type', otpauth_uri)
+        raise ValueError(
+            'Missing field counter in otpauth URI, it is ' 'mandatory with the hotp type', otpauth_uri
+        )
     if params[TYPE] == TOTP and PERIOD not in params:
         params[PERIOD] = 30
     return params
@@ -106,8 +104,7 @@ def from_b32key(b32_key, state=None):
         lenient_b32decode(b32_key)
     except TypeError:
         raise ValueError('invalid base32 value')
-    return GoogleAuthenticator('otpauth://totp/xxx?%s' %
-            urlencode({'secret': b32_key}), state=state)
+    return GoogleAuthenticator('otpauth://totp/xxx?%s' % urlencode({'secret': b32_key}), state=state)
 
 
 class GoogleAuthenticator(object):
@@ -134,14 +131,13 @@ class GoogleAuthenticator(object):
             return otp
         elif self.parsed_otpauth_uri[TYPE] == TOTP:
             period = self.parsed_otpauth_uri[PERIOD]
-            return totp.totp(secret, format=format,
-                             period=period,
-                             hash=hash, t=t)
+            return totp.totp(secret, format=format, period=period, hash=hash, t=t)
         else:
             raise NotImplementedError(self.parsed_otpauth_uri[TYPE])
 
-    def accept(self, otp, hotp_drift=3, hotp_backward_drift=0,
-            totp_forward_drift=1, totp_backward_drift=1, t=None):
+    def accept(
+        self, otp, hotp_drift=3, hotp_backward_drift=0, totp_forward_drift=1, totp_backward_drift=1, t=None
+    ):
         format = 'dec%s' % self.parsed_otpauth_uri[DIGITS]
         hash = self.parsed_otpauth_uri[ALGORITHM]
         secret = self.parsed_otpauth_uri[SECRET]
@@ -149,18 +145,30 @@ class GoogleAuthenticator(object):
         if self.parsed_otpauth_uri[TYPE] == HOTP:
             if COUNTER not in state:
                 state[COUNTER] = self.parsed_otpauth_uri[COUNTER]
-            ok, state[COUNTER] = hotp.accept_hotp(otp, secret, state[COUNTER],
-                    format=format, hash=hash, drift=hotp_drift,
-                    backward_drift=hotp_backward_drift)
+            ok, state[COUNTER] = hotp.accept_hotp(
+                otp,
+                secret,
+                state[COUNTER],
+                format=format,
+                hash=hash,
+                drift=hotp_drift,
+                backward_drift=hotp_backward_drift,
+            )
             return ok
         elif self.parsed_otpauth_uri[TYPE] == TOTP:
             period = self.parsed_otpauth_uri[PERIOD]
             if DRIFT not in state:
                 state[DRIFT] = 0
-            ok, state[DRIFT] = totp.accept_totp(secret, otp, format=format,
-                    period=period, forward_drift=totp_forward_drift,
-                    backward_drift=totp_backward_drift, drift=state[DRIFT],
-                    t=t)
+            ok, state[DRIFT] = totp.accept_totp(
+                secret,
+                otp,
+                format=format,
+                period=period,
+                forward_drift=totp_forward_drift,
+                backward_drift=totp_backward_drift,
+                drift=state[DRIFT],
+                t=t,
+            )
             return ok
         else:
             raise NotImplementedError(self.parsed_otpauth_uri[TYPE])
@@ -175,14 +183,9 @@ class GoogleAuthenticatorURI(object):
         """ constructor """
         return
 
-    def generate(self,
-                 secret,
-                 type='totp',
-                 account='alex',
-                 issuer=None,
-                 algo='sha1',
-                 digits=6,
-                 init_counter=None):
+    def generate(
+        self, secret, type='totp', account='alex', issuer=None, algo='sha1', digits=6, init_counter=None
+    ):
         """
         https://github.com/google/google-authenticator/wiki/Key-Uri-Format
         """
@@ -201,21 +204,18 @@ class GoogleAuthenticatorURI(object):
             raise ValueError('invalid secret format')
 
         if type not in [TOTP, HOTP]:
-            raise ValueError('type should be totp or hotp, got ',
-                             type)
+            raise ValueError('type should be totp or hotp, got ', type)
         if type != TOTP:
             args['type'] = type
 
         if algo not in ['sha1', 'sha256', 'sha512']:
-            raise ValueError('algo should be sha1, sha256 or sha512, got ',
-                             algo)
+            raise ValueError('algo should be sha1, sha256 or sha512, got ', algo)
         if algo != 'sha1':
             args['algorithm'] = algo
 
         if init_counter is not None:
             if type != HOTP:
-                raise ValueError('type should be hotp when ',
-                                 'setting init_counter')
+                raise ValueError('type should be hotp when ', 'setting init_counter')
 
             if int(init_counter) < 0:
                 raise ValueError('init_counter should be positive')

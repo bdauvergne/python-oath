@@ -18,21 +18,26 @@ client side.
 See also http://tools.ietf.org/html/rfc4226
 '''
 
-__all__ = ( 'hotp', 'accept_hotp' )
+__all__ = ('hotp', 'accept_hotp')
+
 
 def truncated_value(h):
     v = h[-1]
-    if not isinstance(v, int): v = ord(v) # Python 2.x
+    if not isinstance(v, int):
+        v = ord(v)  # Python 2.x
     offset = v & 0xF
-    (value,) = struct.unpack('>I', h[offset:offset + 4])
+    (value,) = struct.unpack('>I', h[offset : offset + 4])
     return value & 0x7FFFFFFF
 
-def dec(h,p):
+
+def dec(h, p):
     digits = str(truncated_value(h))
     return digits[-p:].zfill(p)
 
+
 def int2beint64(i):
     return struct.pack('>Q', int(i))
+
 
 def __hotp(key, counter, hash=hashlib.sha1):
     bin_counter = int2beint64(counter)
@@ -40,7 +45,8 @@ def __hotp(key, counter, hash=hashlib.sha1):
 
     return hmac.new(bin_key, bin_counter, hash).digest()
 
-def hotp(key,counter,format='dec6',hash=hashlib.sha1):
+
+def hotp(key, counter, format='dec6', hash=hashlib.sha1):
     '''
        Compute a HOTP value as prescribed by RFC4226
 
@@ -90,8 +96,8 @@ def hotp(key,counter,format='dec6',hash=hashlib.sha1):
     else:
         raise ValueError('unknown format')
 
-def accept_hotp(key, response, counter, format='dec6', hash=hashlib.sha1,
-        drift=3, backward_drift=0):
+
+def accept_hotp(key, response, counter, format='dec6', hash=hashlib.sha1, drift=3, backward_drift=0):
     '''
        Validate a HOTP value inside a window of
        [counter-backward_drift:counter+forward_drift]
@@ -151,7 +157,7 @@ def accept_hotp(key, response, counter, format='dec6', hash=hashlib.sha1,
            (True, 4)
     '''
 
-    for i in range(-backward_drift, drift+1):
-        if _utils.compare_digest(hotp(key, counter+i, format=format, hash=hash), str(response)):
-            return True, counter+i+1
-    return False,counter
+    for i in range(-backward_drift, drift + 1):
+        if _utils.compare_digest(hotp(key, counter + i, format=format, hash=hash), str(response)):
+            return True, counter + i + 1
+    return False, counter
