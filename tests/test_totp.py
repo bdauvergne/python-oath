@@ -57,9 +57,9 @@ class Totp(unittest.TestCase):
     )
 
     hash_algos = {
-        'SHA1': {'key': key_sha1, 'alg': hashlib.sha1,},
-        'SHA256': {'key': key_sha256, 'alg': hashlib.sha256,},
-        'SHA512': {'key': key_sha512, 'alg': hashlib.sha512,},
+        'SHA1': {'key': key_sha1, 'alg': hashlib.sha1},
+        'SHA256': {'key': key_sha256, 'alg': hashlib.sha256},
+        'SHA512': {'key': key_sha512, 'alg': hashlib.sha512},
     }
 
     def test_totp(self):
