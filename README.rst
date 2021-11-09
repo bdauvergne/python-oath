@@ -1,6 +1,9 @@
 Python OATH
 ===========
 
+.. image:: https://github.com/bdauvergne/python-oath/workflows/CI/badge.svg
+        :target: https://github.com/bdauvergne/python-oath/actions
+
 .. image:: https://img.shields.io/pypi/dm/oath
         :target: https://pypi.org/project/oath/
 
