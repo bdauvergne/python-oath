@@ -1,9 +1,6 @@
 Python OATH
 ===========
 
-.. image:: https://travis-ci.org/bdauvergne/python-oath.png?branch=master
-        :target: https://travis-ci.org/bdauvergne/python-oath
-
 .. image:: https://img.shields.io/pypi/dm/oath
         :target: https://pypi.org/project/oath/
 
