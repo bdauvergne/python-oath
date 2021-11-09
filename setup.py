@@ -6,6 +6,7 @@ setup(
     version='1.4.3',
     license='BSD 3-clause',
     description='Python implementation of the three main OATH specifications: HOTP, TOTP and OCRA',
+    long_description=open('README.rst').read(),
     url='https://github.com/bdauvergne/python-oath',
     author='Benjamin Dauvergne',
     author_email='bdauvergne@entrouvert.com',
