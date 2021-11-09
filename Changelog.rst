@@ -1,3 +1,7 @@
+1.4.4
+-----
+* add long description
+
 1.4.3
 -----
 
