@@ -76,7 +76,7 @@ def accept_totp(
 ):
     '''
        Validate a TOTP value inside a window of 
-       [drift-bacward_drift:drift+forward_drift] of time steps.
+       [drift-backward_drift:drift+forward_drift] of time steps.
        Where drift is the drift obtained during the last call to accept_totp.
 
        :param response:

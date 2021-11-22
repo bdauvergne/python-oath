@@ -5,7 +5,7 @@ Google Authenticator API
 ------------------------
 
 Google Authenticator is based on HOTP and TOTP. It provides a simple way of
-provisionning an OTP generator through a new URL scheme.
+provisioning an OTP generator through a new URL scheme.
 
 This module provides parsing and high-level API over the classic HOTP and TOTP
 APIs provided by the oath.hotp and oath.totp modules.
