@@ -125,7 +125,7 @@ class DataInput(object):
        OCRA data input description
 
        By calling this instance of this class and giving the needed parameter
-       corrresponding to the data input description, it compute a binary string
+       corresponding to the data input description, it compute a binary string
        to give to the HMAC algorithme implemented by a CryptoFunction object
     '''
 

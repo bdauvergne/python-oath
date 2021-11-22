@@ -1,7 +1,7 @@
 try:
     from functools import reduce
 except ImportError:
-    # not necesary in Python 2.x
+    # not necessary in Python 2.x
     pass
 
 if hasattr(bytes, 'fromhex'):
