@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='oath',
-    version='1.4.4',
+    version='1.4.5',
     license='BSD-3-Clause',
     description='Python implementation of the three main OATH specifications: HOTP, TOTP and OCRA',
     long_description=open('README.rst').read(),
