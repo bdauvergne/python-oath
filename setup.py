@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name='oath',
     version='1.4.4',
-    license='BSD 3-clause',
+    license='BSD-3-Clause',
     description='Python implementation of the three main OATH specifications: HOTP, TOTP and OCRA',
     long_description=open('README.rst').read(),
     url='https://github.com/bdauvergne/python-oath',
