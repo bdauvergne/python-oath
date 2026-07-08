@@ -11,7 +11,6 @@ setup(
     author='Benjamin Dauvergne',
     author_email='bdauvergne@entrouvert.com',
     packages=['oath'],
-    test_suite='tests',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         'Intended Audience :: Developers',
