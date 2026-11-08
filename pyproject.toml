@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oath"
+version = "1.4.5"
+requires-python = ">=3.8"
+description = "Python implementation of the three main OATH specifications: HOTP, TOTP and OCRA"
+authors = [
+  { name = "Benjamin Dauvergne", email = "bdauvergne@entrouvert.com" }
+]
+readme = "README.rst"
+license = "BSD-3-Clause"
+license-files = ["COPYING*"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Security",
+    "Topic :: Security :: Cryptography",
+]
+
+[project.urls]
+Homepage = "https://github.com/bdauvergne/python-oath"
+"Source Code" = "https://github.com/bdauvergne/python-oath"
+"Bug Tracker" = "https://github.com/bdauvergne/python-oath/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["oath*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3; python_version >= '3.10'",
+    "pytest>=7.0,<8.0; python_version < '3.10'",
+    "ruff>=0.17.4",
+]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ty.environment]
+root = ["./"]
